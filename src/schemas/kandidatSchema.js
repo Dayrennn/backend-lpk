@@ -1,5 +1,11 @@
 import z from 'zod';
 
+export const statusEnum = z.enum(['DRAFT', 'TERVERIFIKASI', 'PERBAIKAN']);
+export const statusOjkEnum = z.enum(['BELUM', 'CHECKING', 'LOLOS', 'TIDAK_LOLOS', 'MANDIRI']);
+export const danaEnum = z.enum(['MANDIRI', 'TALANG']);
+export const pembayaranPelatihanEnum = z.enum(['BELUM', 'DP', 'BULAN_1', 'BULAN_2', 'BULAN_3', 'BULAN_4', 'LUNAS']);
+export const suratPernyataanEnum = z.enum(['SUDAH', 'BELUM']);
+
 export const kandidatSchema = z.object({
     nama: z.string().min(1, 'Nama wajib diisi').max(100, 'Nama maksimal 100 karakter'),
 
@@ -19,7 +25,7 @@ export const kandidatSchema = z.object({
 
     telephone: z.string().min(1, 'Nomor telfon wajib diisi'),
 
-    dana: z.string().min(1, 'Dana wajib diisi'),
+    dana: danaEnum,
 
     bidang_pekerjaan: z.string().optional(),
 
@@ -27,9 +33,14 @@ export const kandidatSchema = z.object({
 
     keterangan: z.string().optional(),
 
-    status: z.string().optional(),
+    status: statusEnum.optional(),
 
-    ojk: z.string().optional(),
+    ojk: statusOjkEnum.optional(),
 });
 
-export const upateKandidatSchema = kandidatSchema.partial();
+export const updateKandidatSchema = kandidatSchema.partial();
+
+export const updateCalonSchema = z.object({
+    biayaPelatihan: pembayaranPelatihanEnum.optional(),
+    suratPernyataan: suratPernyataanEnum.optional(),
+});

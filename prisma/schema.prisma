@@ -58,6 +58,10 @@ model Kandidat {
     telephone String?
     dana Dana?
 
+    // calon pmi
+    biayaPelatihan PembayaranPelatihan @default(BELUM)
+    suratPernyataan SuratPernyataan @default(BELUM)
+
     cvUrl           String
     kkUrl           String
     ktpUrl          String
@@ -95,4 +99,19 @@ enum StatusOJK {
 enum Dana {
   MANDIRI
   TALANG
+}
+
+enum PembayaranPelatihan {
+  BELUM
+  DP
+  BULAN_1
+  BULAN_2
+  BULAN_3
+  BULAN_4
+  LUNAS
+}
+
+enum SuratPernyataan {
+  SUDAH
+  BELUM
 }

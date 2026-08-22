@@ -658,14 +658,16 @@ export const getKandidatCalon = async (page = 1, limit = 10, search = '') => {
                 tujuan: true,
                 ojk: true,
                 dana: true,
+                biayaPelatihan: true,
+                suratPernyataan: true,
             },
         }),
 
         prisma.kandidat.count({ where: kandidatWhere }),
 
-        prisma.kandidat.count({ where: { ...where, dana: 'TALANG' } }),
+        prisma.kandidat.count({ where: { ...kandidatWhere, dana: 'TALANG' } }),
 
-        prisma.kandidat.count({ where: { ...where, dana: 'MANDIRI' } }),
+        prisma.kandidat.count({ where: { ...kandidatWhere, dana: 'MANDIRI' } }),
     ]);
 
     return {
@@ -679,4 +681,30 @@ export const getKandidatCalon = async (page = 1, limit = 10, search = '') => {
             totalPages: Math.ceil(totalKandidat / limit),
         },
     };
+};
+
+export const inputPersyaratandanDp = async ({ id, biayaPelatihan, suratPernyataan }) => {
+    // const calon = await prisma.kandidat.findUnique({
+    //     where: { id },
+    // });
+
+    // if (!calon) {
+    //     throw new Error('Data Calon Tidak di Temukan');
+    // }
+
+    const input = await prisma.kandidat.update({
+        where: { id },
+        data: {
+            biayaPelatihan,
+            suratPernyataan,
+        },
+        select: {
+            id: true,
+            nama: true,
+            biayaPelatihan: true,
+            suratPernyataan: true,
+        },
+    });
+
+    return input;
 };

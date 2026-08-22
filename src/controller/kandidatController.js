@@ -1,4 +1,4 @@
-import { kandidatSchema, upateKandidatSchema } from '../schemas/kandidatSchema.js';
+import { kandidatSchema, updateCalonSchema, updateKandidatSchema } from '../schemas/kandidatSchema.js';
 import {
     addKandidat,
     deleteKandidat,
@@ -7,6 +7,7 @@ import {
     getOneKandidat,
     updateKandidat,
     getKandidatCalon,
+    inputPersyaratandanDp,
 } from '../service/kandidatService.js';
 
 export const createKandidat = async (req, res) => {
@@ -89,7 +90,7 @@ export const modifyKandidat = async (req, res) => {
         const { id } = req.params;
         const userId = req.user?.id;
 
-        const result = upateKandidatSchema.safeParse(req.body);
+        const result = updateKandidatSchema.safeParse(req.body);
         if (!result.success) {
             const errors = result.error.flatten().fieldErrors;
 
@@ -242,6 +243,36 @@ export const seeAllKandidatCalon = async (req, res) => {
         res.status(200).json({
             message: 'Berhasil Mengambil Data Kandidat Calon',
             data: result,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
+export const submitPersyaratandanDp = async (req, res) => {
+    try {
+        const { id } = req.params;
+        // validasi body
+        const result = updateCalonSchema.safeParse(req.body);
+        // format error
+        if (!result.success) {
+            console.log('FULL ERROR:', result.error.flatten()); // tambahkan ini
+            console.log('REQ BODY:', req.body); // tambahkan ini juga
+            const errors = result.error.flatten().fieldErrors;
+
+            return res.status(400).json({
+                message: 'Validasi Gagal',
+                errors,
+            });
+        }
+
+        const { biayaPelatihan, suratPernyataan } = result.data;
+        const input = await inputPersyaratandanDp({ id, biayaPelatihan, suratPernyataan });
+        res.status(200).json({
+            message: 'Berhasil Input Persyaratan Data Kandidat Calon',
+            data: input,
         });
     } catch (error) {
         res.status(500).json({

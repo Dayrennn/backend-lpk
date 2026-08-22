@@ -8,6 +8,7 @@ import {
     seeAllKandidat,
     seeAllKandidatCalon,
     seeOneKandidat,
+    submitPersyaratandanDp,
 } from '../controller/kandidatController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 
@@ -25,6 +26,8 @@ router.post(
     ]),
     createKandidat,
 );
+
+router.post('/simpan-persyaratan/:id', authMiddleware, submitPersyaratandanDp);
 
 router.put(
     '/update-kandidat/:id',
