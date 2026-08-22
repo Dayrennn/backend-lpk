@@ -14,7 +14,7 @@ const port = 3000;
 app.use(morgan('dev'));
 app.use(
     cors({
-        origin: 'http://localhost:3001',
+        origin: ['http://localhost:3001', 'https://delta-abadi-international.netlify.app/'],
         credentials: true,
     }),
 );
