@@ -1,0 +1,251 @@
+import { kandidatSchema, upateKandidatSchema } from '../schemas/kandidatSchema.js';
+import {
+    addKandidat,
+    deleteKandidat,
+    getAllkandidat,
+    getKandidatFile,
+    getOneKandidat,
+    updateKandidat,
+    getKandidatCalon,
+} from '../service/kandidatService.js';
+
+export const createKandidat = async (req, res) => {
+    try {
+        // validasi body
+        const result = kandidatSchema.safeParse(req.body);
+        // format error
+        if (!result.success) {
+            const errors = result.error.flatten().fieldErrors;
+
+            return res.status(400).json({
+                message: 'Validasi Gagal',
+                errors,
+            });
+        }
+
+        const {
+            nama,
+            tinggi,
+            berat_badan,
+            umur,
+            tgllahir,
+            tujuan,
+            status,
+            pendidikan,
+            asal,
+            bidang_pekerjaan,
+            pic,
+            keterangan,
+            telephone,
+            dana,
+        } = result.data;
+
+        const files = req.files;
+
+        const cvBuffer = files?.cv?.[0]?.buffer;
+        const kkBuffer = files?.kk?.[0]?.buffer;
+        const ktpBuffer = files?.ktp?.[0]?.buffer;
+        const ktp_pendampingBuffer = files?.ktp_pendamping?.[0]?.buffer;
+        const ijazahBuffer = files?.ijazah?.[0]?.buffer;
+        const sertifikatBuffer = files?.sertifikat?.[0]?.buffer ?? null;
+
+        const kandidat = await addKandidat({
+            nama,
+            tinggi,
+            berat_badan,
+            umur,
+            tgllahir,
+            tujuan,
+            status,
+            pendidikan,
+            asal,
+            bidang_pekerjaan,
+            pic,
+            keterangan,
+            telephone,
+            dana,
+
+            cvBuffer,
+            kkBuffer,
+            ktpBuffer,
+            ktp_pendampingBuffer,
+            ijazahBuffer,
+            sertifikatBuffer,
+        });
+
+        return res.status(201).json({
+            message: 'Kandidat berhasil ditambahkan',
+            data: kandidat,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
+export const modifyKandidat = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user?.id;
+
+        const result = upateKandidatSchema.safeParse(req.body);
+        if (!result.success) {
+            const errors = result.error.flatten().fieldErrors;
+
+            return res.status(400).json({
+                message: 'Validasi Gagal',
+                errors,
+            });
+        }
+
+        const {
+            nama,
+            tinggi,
+            berat_badan,
+            umur,
+            tgllahir,
+            tujuan,
+            status,
+            ojk,
+            pendidikan,
+            asal,
+            bidang_pekerjaan,
+            pic,
+            keterangan,
+            telephone,
+            dana,
+        } = result.data;
+
+        const files = req.files;
+
+        const cvBuffer = files?.cv?.[0]?.buffer;
+        const kkBuffer = files?.kk?.[0]?.buffer;
+        const ktpBuffer = files?.ktp?.[0]?.buffer;
+        const ktp_pendampingBuffer = files?.ktp_pendamping?.[0]?.buffer;
+        const ijazahBuffer = files?.ijazah?.[0]?.buffer;
+        const sertifikatBuffer = files?.sertifikat?.[0]?.buffer ?? null;
+
+        const kandidat = await updateKandidat(id, {
+            nama,
+            tinggi,
+            berat_badan,
+            umur,
+            tgllahir,
+            userId,
+            userRole: req.user?.role,
+            tujuan,
+            status,
+            ojk,
+            pendidikan,
+            asal,
+            bidang_pekerjaan,
+            pic,
+            keterangan,
+            telephone,
+            dana,
+
+            cvBuffer,
+            kkBuffer,
+            ktpBuffer,
+            ktp_pendampingBuffer,
+            ijazahBuffer,
+            sertifikatBuffer,
+        });
+
+        return res.status(201).json({
+            message: `Kandidat telah di update oleh ${kandidat.user?.username}`,
+            data: kandidat,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
+export const removeKandidat = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await deleteKandidat(id);
+
+        res.status(200).json({
+            message: 'Berhasil Hapus Kandidat',
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
+export const seeAllKandidat = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const { search = '' } = req.query;
+
+        const result = await getAllkandidat(page, limit, search);
+        res.status(200).json({
+            message: 'Berhasil Mengambil Data Kandidat',
+            data: result,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
+export const downloadKandidatFile = async (req, res) => {
+    try {
+        const { id, field } = req.params;
+
+        const file = await getKandidatFile(id, field);
+
+        res.setHeader('Content-Type', file.contentType || 'application/octet-stream');
+
+        res.setHeader('Content-Disposition', `attachment; filename="${field}-${file.nama}"`);
+
+        file.stream.pipe(res);
+    } catch (error) {
+        console.error('Download File Error:', error);
+
+        return res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
+export const seeOneKandidat = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await getOneKandidat(id);
+        res.status(200).json({
+            message: 'Berhasil Mengambil Saty Data Kandidat',
+            data: result,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
+export const seeAllKandidatCalon = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const { search = '' } = req.query;
+
+        const result = await getKandidatCalon(page, limit, search);
+        res.status(200).json({
+            message: 'Berhasil Mengambil Data Kandidat Calon',
+            data: result,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};

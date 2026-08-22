@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model BlacklistedToken {
+    id        String   @id @default(uuid())
+    token     String   @unique
+    expiresAt DateTime
+    createdAt DateTime @default(now())
+}
+
+model User {
+    id String @id @default(uuid())
+    email String @unique
+    username String @unique
+    password String
+    role Role @default(Admin)
+
+    kandidat Kandidat[]
+}
+
+enum Role {
+  Admin
+  SuperAdmin
+}
+
+model Otp {
+    id String @id @default(uuid())
+    email String
+    code String
+    type String
+    metadata String
+    expiresAt DateTime
+    createdAt DateTime
+}
+
+model Kandidat {
+    id              String   @id @default(uuid())
+    userId String?
+    nama String
+    tinggi Float
+    berat_badan Float
+    umur Int
+    tgllahir DateTime
+    status Status @default(DRAFT)
+    tujuan String?
+    ojk StatusOJK @default(BELUM)
+    pendidikan String 
+    asal String
+    bidang_pekerjaan String?
+    pic String?
+    keterangan String?
+    telephone String?
+    dana Dana?
+
+    cvUrl           String
+    kkUrl           String
+    ktpUrl          String
+    ktp_pendampingUrl     String
+    ijazahUrl       String?
+    sertifikatUrl   String?
+
+    cvPublicId      String
+    kkPublicId      String
+    ktpPublicId     String
+    ktp_pendampingPublicId String
+    ijazahPublicId  String?
+    sertifikatPublicId String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    user User? @relation(fields: [userId], references: [id])
+}
+
+enum Status {
+  DRAFT
+  TERVERIFIKASI
+  PERBAIKAN
+}
+
+enum StatusOJK {
+  BELUM
+  CHECKING
+  LOLOS
+  TIDAK_LOLOS
+  MANDIRI
+}
+
+enum Dana {
+  MANDIRI
+  TALANG
+}
