@@ -1,6 +1,7 @@
 import express from 'express';
 import upload from '../middleware/uploadMiddleware.js';
 import {
+    checkKandidat,
     createKandidat,
     downloadKandidatFile,
     modifyKandidat,
@@ -46,6 +47,7 @@ router.put(
 router.delete('/delete-kandidat/:id', authMiddleware, removeKandidat);
 
 router.get('/', authMiddleware, seeAllKandidat);
+router.get('/check', checkKandidat);
 router.get('/calon-pekerja', authMiddleware, seeAllKandidatCalon);
 router.get('/:id', authMiddleware, seeOneKandidat);
 router.get('/:id/download/:field', authMiddleware, downloadKandidatFile);

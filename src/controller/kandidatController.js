@@ -8,6 +8,7 @@ import {
     updateKandidat,
     getKandidatCalon,
     inputPersyaratandanDp,
+    getFromKodeRegistrasi,
 } from '../service/kandidatService.js';
 
 export const createKandidat = async (req, res) => {
@@ -273,6 +274,21 @@ export const submitPersyaratandanDp = async (req, res) => {
         res.status(200).json({
             message: 'Berhasil Input Persyaratan Data Kandidat Calon',
             data: input,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
+export const checkKandidat = async (req, res) => {
+    try {
+        const { kodeRegistrasi } = req.body;
+        const result = await getFromKodeRegistrasi(kodeRegistrasi);
+        res.status(200).json({
+            message: 'Berhasil Ambil Data Dari Kode',
+            data: result,
         });
     } catch (error) {
         res.status(500).json({

@@ -1,8 +1,14 @@
+import { randomInt } from 'crypto';
 import prisma from '../config/prisma.js';
 import { deleteFromCloudinary, uploadToCloudinary, downloadFromCloudinary, privateFileUrl } from '../S3/s3Service.js';
 import compressToWebp from '../utils/compressWebp.js';
 
+const generateCode = () => {
+    return randomInt(100000, 1000000).toString();
+};
+
 export const addKandidat = async ({
+    kodeRegistrasi,
     nama,
     tinggi,
     berat_badan,
@@ -63,6 +69,21 @@ export const addKandidat = async ({
     if (!dana) {
         throw new Error('Dana Wajin di Isi');
     }
+
+    const generateUniqueCode = async () => {
+        let kode;
+        let exists = true;
+        while (exists) {
+            kode = generateCode();
+            const found = await prisma.kandidat.findUnique({
+                where: { kodeRegistrasi: kode },
+            });
+            exists = !!found;
+        }
+        return kode;
+    };
+
+    const code = await generateUniqueCode();
 
     // konversi
     const tinggiFloat = parseFloat(tinggi);
@@ -136,6 +157,7 @@ export const addKandidat = async ({
     const statusOJK = dana === 'MANDIRI' ? 'MANDIRI' : dana === 'TALANG' ? 'LOLOS' : 'BELUM';
     const addKandidat = await prisma.kandidat.create({
         data: {
+            kodeRegistrasi: code,
             nama,
             tinggi: tinggiFloat,
             berat_badan: beratBadanFloat,
@@ -707,4 +729,36 @@ export const inputPersyaratandanDp = async ({ id, biayaPelatihan, suratPernyataa
     });
 
     return input;
+};
+
+export const getFromKodeRegistrasi = async (kodeRegistrasi) => {
+    const existingKodeRegis = await prisma.kandidat.findUnique({
+        where: { kodeRegistrasi },
+    });
+
+    if (!existingKodeRegis) {
+        throw new Error(`Kandidat dengan nomor regis ${kodeRegistrasi} tidak ditemukan`);
+    }
+
+    const result = await prisma.kandidat.findFirst({
+        where: { kodeRegistrasi },
+        select: {
+            kodeRegistrasi: true,
+            nama: true,
+            tinggi: true,
+            berat_badan: true,
+            umur: true,
+            tgllahir: true,
+            status: true,
+            tujuan: true,
+            ojk: true,
+            pendidikan: true,
+            asal: true,
+            dana: true,
+            telephone: true,
+            keterangan: true,
+        },
+    });
+
+    return result;
 };
