@@ -1,6 +1,6 @@
 import z from 'zod';
 
-export const statusEnum = z.enum(['DRAFT', 'TERVERIFIKASI', 'PERBAIKAN']);
+export const statusEnum = z.enum(['DRAFT', 'TERVERIFIKASI', 'PERBAIKAN', 'MUNDUR']);
 export const statusOjkEnum = z.enum(['BELUM', 'CHECKING', 'LOLOS', 'TIDAK_LOLOS', 'MANDIRI']);
 export const danaEnum = z.enum(['MANDIRI', 'TALANG']);
 export const pembayaranPelatihanEnum = z.enum(['BELUM', 'DP', 'BULAN_1', 'BULAN_2', 'BULAN_3', 'BULAN_4', 'LUNAS']);

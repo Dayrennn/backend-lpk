@@ -534,6 +534,7 @@ export const getAllkandidat = async (page = 1, limit = 10, search = '') => {
                 sertifikatPublicId: true,
                 user: { select: { id: true, username: true } },
             },
+            orderBy: { createdAt: 'desc' },
         }),
 
         prisma.kandidat.count({
@@ -655,20 +656,24 @@ export const getOneKandidat = async (id) => {
 export const getKandidatCalon = async (page = 1, limit = 10, search = '') => {
     const skip = (page - 1) * limit;
 
-    const where = search.trim()
-        ? {
-              nama: {
-                  contains: search.trim(),
-                  mode: 'insensitive',
-              },
-          }
-        : {};
-
-    const kandidatWhere = { ...where, ojk: { in: ['LOLOS', 'MANDIRI'] } };
+    const where = {
+        ojk: { in: ['LOLOS', 'MANDIRI'] },
+        dana: { in: ['MANDIRI', 'TALANG'] },
+        status: 'TERVERIFIKASI',
+        OR: [{ biayaPelatihan: 'BELUM' }, { suratPernyataan: 'BELUM' }],
+        kelasInggrisId: null,
+        kelasJepangId: null,
+        ...(search.trim() && {
+            nama: {
+                contains: search.trim(),
+                mode: 'insensitive',
+            },
+        }),
+    };
 
     const [kandidat, totalKandidat, totalTalang, totalMandiri] = await prisma.$transaction([
         prisma.kandidat.findMany({
-            where: kandidatWhere,
+            where,
             skip,
             take: limit,
             select: {
@@ -680,17 +685,18 @@ export const getKandidatCalon = async (page = 1, limit = 10, search = '') => {
                 asal: true,
                 tujuan: true,
                 ojk: true,
+                status: true,
                 dana: true,
                 biayaPelatihan: true,
                 suratPernyataan: true,
             },
         }),
 
-        prisma.kandidat.count({ where: kandidatWhere }),
+        prisma.kandidat.count({ where }),
 
-        prisma.kandidat.count({ where: { ...kandidatWhere, dana: 'TALANG' } }),
+        prisma.kandidat.count({ where: { ...where, dana: 'TALANG' } }),
 
-        prisma.kandidat.count({ where: { ...kandidatWhere, dana: 'MANDIRI' } }),
+        prisma.kandidat.count({ where: { ...where, dana: 'MANDIRI' } }),
     ]);
 
     return {
@@ -755,6 +761,39 @@ export const getFromKodeRegistrasi = async (kodeRegistrasi) => {
 
     return result;
 };
+// export const getFromKodeRegistrasi = async (kodeRegistrasi) => {
+//     console.log('KODE YANG DICARI:', JSON.stringify(kodeRegistrasi));
+
+//     const semuaKandidat = await prisma.kandidat.findMany({
+//         select: {
+//             id: true,
+//             kodeRegistrasi: true,
+//             nama: true,
+//         },
+//         orderBy: {
+//             createdAt: 'desc',
+//         },
+//         take: 20,
+//     });
+
+//     console.log('=== DATA YANG DILIHAT BACKEND ===');
+//     console.table(semuaKandidat);
+//     console.log('================================');
+
+//     const kandidat = await prisma.kandidat.findUnique({
+//         where: {
+//             kodeRegistrasi: kodeRegistrasi.trim(),
+//         },
+//     });
+
+//     console.log('HASIL FIND UNIQUE:', kandidat);
+
+//     if (!kandidat) {
+//         throw new Error(`Kandidat dengan nomor regis ${kodeRegistrasi} tidak ditemukan`);
+//     }
+
+//     return kandidat;
+// };
 
 export const getKandidatForClass = async (page = 1, limit = 10, search = '') => {
     const skip = (page - 1) * limit;
@@ -764,6 +803,7 @@ export const getKandidatForClass = async (page = 1, limit = 10, search = '') => 
         dana: { in: ['MANDIRI', 'TALANG'] },
         biayaPelatihan: { in: ['DP', 'BULAN_1', 'BULAN_2', 'BULAN_3', 'BULAN_4', 'LUNAS'] },
         suratPernyataan: 'SUDAH',
+        status: 'TERVERIFIKASI',
         kelasInggrisId: null,
         kelasJepangId: null,
         ...(search.trim() && {
@@ -871,11 +911,13 @@ export const addSiswaToClass = async ({ kandidatId, tipeKelas }) => {
 };
 
 export const getKandidatKelasInggris = async (page = 1, limit = 10, search = '') => {
+    const skip = (page - 1) * limit;
     const where = {
         ojk: { in: ['LOLOS', 'MANDIRI'] },
         dana: { in: ['MANDIRI', 'TALANG'] },
         biayaPelatihan: { in: ['DP', 'BULAN_1', 'BULAN_2', 'BULAN_3', 'BULAN_4', 'LUNAS'] },
         suratPernyataan: 'SUDAH',
+        status: 'TERVERIFIKASI',
         kelasInggrisId: { not: null },
         kelasJepangId: null,
         ...(search.trim() && {
@@ -889,6 +931,8 @@ export const getKandidatKelasInggris = async (page = 1, limit = 10, search = '')
     const [kandidat, totalKandidat] = await prisma.$transaction([
         prisma.kandidat.findMany({
             where,
+            skip,
+            take: limit,
             select: {
                 id: true,
                 nama: true,
@@ -911,6 +955,113 @@ export const getKandidatKelasInggris = async (page = 1, limit = 10, search = '')
         prisma.kandidat.count({ where }),
     ]);
 
+    return {
+        kandidat,
+        pagination: {
+            page,
+            limit,
+            total: totalKandidat,
+            totalPages: Math.ceil(totalKandidat / limit),
+        },
+    };
+};
+
+export const getKandidatKelasJepang = async (page = 1, limit = 10, search = '') => {
+    const skip = (page - 1) * limit;
+
+    const where = {
+        ojk: { in: ['LOLOS', 'MANDIRI'] },
+        dana: { in: ['MANDIRI', 'TALANG'] },
+        biayaPelatihan: { in: ['DP', 'BULAN_1', 'BULAN_2', 'BULAN_3', 'BULAN_4', 'LUNAS'] },
+        suratPernyataan: 'SUDAH',
+        status: 'TERVERIFIKASI',
+        kelasInggrisId: null,
+        kelasJepangId: { not: null },
+        ...(search.trim() && {
+            nama: {
+                contains: search.trim(),
+                mode: 'insensitive',
+            },
+        }),
+    };
+
+    const [kandidat, totalKandidat] = await prisma.$transaction([
+        prisma.kandidat.findMany({
+            where,
+            skip,
+            take: limit,
+            select: {
+                id: true,
+                nama: true,
+                umur: true,
+                createdAt: true,
+                telephone: true,
+                pendidikan: true,
+                asal: true,
+                tujuan: true,
+                biayaPelatihan: true,
+                suratPernyataan: true,
+                ojk: true,
+                pic: true,
+                kelasInggris: true,
+                kelasJepang: true,
+                kelasInggrisId: true,
+                kelasJepangId: true,
+            },
+        }),
+        prisma.kandidat.count({ where }),
+    ]);
+
+    return {
+        kandidat,
+        pagination: {
+            page,
+            limit,
+            total: totalKandidat,
+            totalPages: Math.ceil(totalKandidat / limit),
+        },
+    };
+};
+
+export const getKandidatMundur = async (page = 1, limit = 10, search = '') => {
+    const skip = (page - 1) * limit;
+
+    const where = {
+        status: 'MUNDUR',
+        ...(search.trim() && {
+            nama: {
+                contains: search.trim(),
+                mode: 'insensitive',
+            },
+        }),
+    };
+
+    const [kandidat, totalKandidat] = await prisma.$transaction([
+        prisma.kandidat.findMany({
+            where,
+            select: {
+                id: true,
+                nama: true,
+                umur: true,
+                createdAt: true,
+                telephone: true,
+                pendidikan: true,
+                asal: true,
+                tujuan: true,
+                biayaPelatihan: true,
+                suratPernyataan: true,
+                status: true,
+                ojk: true,
+                pic: true,
+                kelasInggris: true,
+                kelasJepang: true,
+            },
+            orderBy: { nama: 'asc' },
+            skip,
+            take: limit,
+        }),
+        prisma.kandidat.count({ where }),
+    ]);
     return {
         kandidat,
         pagination: {

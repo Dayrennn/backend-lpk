@@ -10,7 +10,9 @@ import {
     seeAllKandidat,
     seeAllKandidatCalon,
     seeAllKandidatInggris,
+    seeAllKandidatJepang,
     seeKandidatForClass,
+    seeKandidatMundur,
     seeOneKandidat,
     submitPersyaratandanDp,
 } from '../controller/kandidatController.js';
@@ -31,6 +33,7 @@ router.post(
     createKandidat,
 );
 
+router.post('/check', checkKandidat);
 router.post('/simpan-persyaratan/:id', authMiddleware, submitPersyaratandanDp);
 router.post('/:kandidatId/kelas', authMiddleware, createKandidatToClass);
 
@@ -51,10 +54,13 @@ router.put(
 router.delete('/delete-kandidat/:id', authMiddleware, removeKandidat);
 
 router.get('/', authMiddleware, seeAllKandidat);
-router.get('/check', checkKandidat);
+
+router.get('/kandidat-mundur', authMiddleware, seeKandidatMundur);
 router.get('/calon-pekerja', authMiddleware, seeAllKandidatCalon);
 router.get('/kandidat-kelas', authMiddleware, seeKandidatForClass);
 router.get('/kelas-inggris', authMiddleware, seeAllKandidatInggris);
+router.get('/kelas-jepang', authMiddleware, seeAllKandidatJepang);
+
 router.get('/:id', authMiddleware, seeOneKandidat);
 router.get('/:id/download/:field', authMiddleware, downloadKandidatFile);
 

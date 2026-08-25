@@ -93,6 +93,7 @@ enum Status {
   DRAFT
   TERVERIFIKASI
   PERBAIKAN
+  MUNDUR
 }
 
 enum StatusOJK {
