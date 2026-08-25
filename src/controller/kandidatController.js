@@ -9,6 +9,9 @@ import {
     getKandidatCalon,
     inputPersyaratandanDp,
     getFromKodeRegistrasi,
+    getKandidatForClass,
+    addSiswaToClass,
+    getKandidatKelasInggris,
 } from '../service/kandidatService.js';
 
 export const createKandidat = async (req, res) => {
@@ -288,6 +291,58 @@ export const checkKandidat = async (req, res) => {
         const result = await getFromKodeRegistrasi(kodeRegistrasi);
         res.status(200).json({
             message: 'Berhasil Ambil Data Dari Kode',
+            data: result,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
+export const seeKandidatForClass = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const { search = '' } = req.query;
+        const result = await getKandidatForClass(page, limit, search);
+        res.status(200).json({
+            message: 'Berhasil Ambil Data Kandidat Untuk Masuk Kelas',
+            data: result,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
+export const createKandidatToClass = async (req, res) => {
+    try {
+        const { kandidatId } = req.params;
+        const { tipeKelas } = req.body;
+
+        const result = await addSiswaToClass({ kandidatId, tipeKelas });
+        res.status(200).json({
+            message: 'Kandidat Berhasil ditambahkan ke Kelas',
+            data: result,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
+export const seeAllKandidatInggris = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const { search = '' } = req.query;
+
+        const result = await getKandidatKelasInggris(page, limit, search);
+        res.status(200).json({
+            message: 'Berhasil Ambil Data Kandidat Kelas Inggris',
             data: result,
         });
     } catch (error) {

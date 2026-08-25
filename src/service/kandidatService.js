@@ -154,7 +154,7 @@ export const addKandidat = async ({
         });
     }
 
-    const statusOJK = dana === 'MANDIRI' ? 'MANDIRI' : dana === 'TALANG' ? 'LOLOS' : 'BELUM';
+    const statusOJK = dana === 'MANDIRI' ? 'MANDIRI' : 'BELUM';
     const addKandidat = await prisma.kandidat.create({
         data: {
             kodeRegistrasi: code,
@@ -501,6 +501,7 @@ export const getAllkandidat = async (page = 1, limit = 10, search = '') => {
             take: limit,
             select: {
                 id: true,
+                kodeRegistrasi: true,
                 nama: true,
                 tinggi: true,
                 berat_badan: true,
@@ -706,14 +707,6 @@ export const getKandidatCalon = async (page = 1, limit = 10, search = '') => {
 };
 
 export const inputPersyaratandanDp = async ({ id, biayaPelatihan, suratPernyataan }) => {
-    // const calon = await prisma.kandidat.findUnique({
-    //     where: { id },
-    // });
-
-    // if (!calon) {
-    //     throw new Error('Data Calon Tidak di Temukan');
-    // }
-
     const input = await prisma.kandidat.update({
         where: { id },
         data: {
@@ -761,4 +754,170 @@ export const getFromKodeRegistrasi = async (kodeRegistrasi) => {
     });
 
     return result;
+};
+
+export const getKandidatForClass = async (page = 1, limit = 10, search = '') => {
+    const skip = (page - 1) * limit;
+
+    const where = {
+        ojk: { in: ['LOLOS', 'MANDIRI'] },
+        dana: { in: ['MANDIRI', 'TALANG'] },
+        biayaPelatihan: { in: ['DP', 'BULAN_1', 'BULAN_2', 'BULAN_3', 'BULAN_4', 'LUNAS'] },
+        suratPernyataan: 'SUDAH',
+        kelasInggrisId: null,
+        kelasJepangId: null,
+        ...(search.trim() && {
+            nama: {
+                contains: search.trim(),
+                mode: 'insensitive',
+            },
+        }),
+    };
+
+    const [result, total] = await Promise.all([
+        prisma.kandidat.findMany({
+            where,
+            select: {
+                id: true,
+                nama: true,
+                umur: true,
+                createdAt: true,
+                telephone: true,
+                pendidikan: true,
+                asal: true,
+                tujuan: true,
+                biayaPelatihan: true,
+                suratPernyataan: true,
+                ojk: true,
+                pic: true,
+                kelasInggris: true,
+                kelasJepang: true,
+            },
+            orderBy: { nama: 'asc' },
+            skip,
+            take: limit,
+        }),
+        prisma.kandidat.count({ where }),
+    ]);
+
+    return {
+        data: result,
+        pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit),
+        },
+    };
+};
+
+export const addSiswaToClass = async ({ kandidatId, tipeKelas }) => {
+    if (!kandidatId) {
+        throw new Error('Kandidat tidak ditemukan');
+    }
+
+    const kandidat = await prisma.kandidat.findUnique({
+        where: {
+            id: kandidatId,
+        },
+    });
+
+    if (!kandidat) {
+        throw new Error('Kandidat Tidak di Temukan');
+    }
+
+    if (tipeKelas === 'belum') {
+        const update = await prisma.kandidat.update({
+            where: { id: kandidatId },
+            data: {
+                kelasJepangId: null,
+                kelasInggrisId: null,
+            },
+            include: {
+                kelasJepang: true,
+                kelasInggris: true,
+            },
+        });
+
+        return update;
+    }
+
+    let kelas;
+    if (tipeKelas === 'jepang') {
+        kelas = await prisma.kelasJepang.findFirst();
+    } else if (tipeKelas === 'inggris') {
+        kelas = await prisma.kelasInggris.findFirst();
+    } else {
+        throw new Error('Kelas Tidak di Temukan');
+    }
+
+    if (!kelas) {
+        throw new Error(`Kelas ${tipeKelas === 'jepang' ? 'Jepang' : 'Inggris'} tidak ditemukan`);
+    }
+
+    const update = await prisma.kandidat.update({
+        where: { id: kandidatId },
+        data:
+            tipeKelas === 'jepang'
+                ? { kelasJepangId: kelas.id, kelasInggrisId: null }
+                : { kelasInggrisId: kelas.id, kelasJepangId: null },
+        include: {
+            kelasJepang: true,
+            kelasInggris: true,
+        },
+    });
+
+    return update;
+};
+
+export const getKandidatKelasInggris = async (page = 1, limit = 10, search = '') => {
+    const where = {
+        ojk: { in: ['LOLOS', 'MANDIRI'] },
+        dana: { in: ['MANDIRI', 'TALANG'] },
+        biayaPelatihan: { in: ['DP', 'BULAN_1', 'BULAN_2', 'BULAN_3', 'BULAN_4', 'LUNAS'] },
+        suratPernyataan: 'SUDAH',
+        kelasInggrisId: { not: null },
+        kelasJepangId: null,
+        ...(search.trim() && {
+            nama: {
+                contains: search.trim(),
+                mode: 'insensitive',
+            },
+        }),
+    };
+
+    const [kandidat, totalKandidat] = await prisma.$transaction([
+        prisma.kandidat.findMany({
+            where,
+            select: {
+                id: true,
+                nama: true,
+                umur: true,
+                createdAt: true,
+                telephone: true,
+                pendidikan: true,
+                asal: true,
+                tujuan: true,
+                biayaPelatihan: true,
+                suratPernyataan: true,
+                ojk: true,
+                pic: true,
+                kelasInggris: true,
+                kelasJepang: true,
+                kelasInggrisId: true,
+                kelasJepangId: true,
+            },
+        }),
+        prisma.kandidat.count({ where }),
+    ]);
+
+    return {
+        kandidat,
+        pagination: {
+            page,
+            limit,
+            total: totalKandidat,
+            totalPages: Math.ceil(totalKandidat / limit),
+        },
+    };
 };

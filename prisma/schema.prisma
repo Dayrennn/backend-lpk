@@ -43,7 +43,6 @@ model Kandidat {
     id              String   @id @default(uuid())
     kodeRegistrasi String? @unique
     userId String?
-    kelasId String?
     nama String
     tinggi Float
     berat_badan Float
@@ -59,6 +58,9 @@ model Kandidat {
     keterangan String?
     telephone String?
     dana Dana?
+
+    kelasJepangId String?
+    kelasInggrisId String?
 
     // calon pmi
     biayaPelatihan PembayaranPelatihan @default(BELUM)
@@ -82,7 +84,9 @@ model Kandidat {
     updatedAt DateTime @updatedAt
 
     user User? @relation(fields: [userId], references: [id])
-    kelas Kelas? @relation(fields: [kelasId], references: [id])
+
+    kelasJepang KelasJepang? @relation(fields: [kelasJepangId], references: [id])
+    kelasInggris KelasInggris? @relation(fields: [kelasInggrisId], references: [id])
 }
 
 enum Status {
@@ -119,10 +123,16 @@ enum SuratPernyataan {
   BELUM
 }
 
-model Kelas {
-  id String   @id @default(uuid())
-  namaKelas String
-  kodeKelas String
+model KelasJepang {
+  id String @id @default(uuid())
+  deskripsi String
+
+  kandidat Kandidat[]
+}
+
+model KelasInggris {
+  id String @id @default(uuid())
+  deskripsi String
 
   kandidat Kandidat[]
 }
