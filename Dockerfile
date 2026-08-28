@@ -23,4 +23,4 @@ RUN npx prisma generate
 EXPOSE 3000
 
 # nantinya akan menjalan kan npm start
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "start"]
