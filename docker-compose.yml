@@ -1,0 +1,27 @@
+services:
+    backend:
+        build: .
+        container_name: backend-lpk
+        ports:
+            - '3000:3000'
+        env_file:
+            - .env
+        volumes:
+            - .:/app
+            - /app/node_modules
+        command: npm run dev
+
+    postgres:
+        image: postgres:17
+        container_name: postgres-lpk
+        environment:
+            POSTGRES_USER: rafly
+            POSTGRES_PASSWORD: kukubimaplus
+            POSTGRES_DB: lpkdb
+        ports:
+            - '5432:5432'
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+
+volumes:
+    postgres_data:
