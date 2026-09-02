@@ -1,7 +1,8 @@
-import { randomInt } from 'crypto';
-import prisma from '../config/prisma.js';
-import { deleteFromCloudinary, uploadToCloudinary, downloadFromCloudinary, privateFileUrl } from '../S3/s3Service.js';
-import compressToWebp from '../utils/compressWebp.js';
+import { randomInt } from "crypto";
+import prisma from "../config/prisma.js";
+import { deleteFromCloudinary, uploadToCloudinary, downloadFromCloudinary, privateFileUrl } from "../S3/s3Service.js";
+import compressToWebp from "../utils/compressWebp.js";
+import { calculateAge } from "../utils/calculateAge.js";
 
 const generateCode = () => {
     return randomInt(100000, 1000000).toString();
@@ -12,16 +13,21 @@ export const addKandidat = async ({
     nama,
     tinggi,
     berat_badan,
-    umur,
     tgllahir,
     tujuan,
     status,
     pendidikan,
-    asal,
+    provinsiId,
+    kabupatenId,
     bidang_pekerjaan,
     pic,
     keterangan,
     telephone,
+    telephone_sekunder,
+    agama,
+    pernikahan,
+    email,
+    tempatLahir,
     dana,
     cvBuffer,
     kkBuffer,
@@ -31,43 +37,52 @@ export const addKandidat = async ({
     sertifikatBuffer,
 }) => {
     if (!nama) {
-        throw new Error('Nama Wajib di Isi');
+        throw new Error("Nama Wajib di Isi");
     }
     if (!tinggi && tinggi !== 0) {
-        throw new Error('Tinggi Wajib di Isi');
+        throw new Error("Tinggi Wajib di Isi");
     }
     if (!berat_badan && berat_badan !== 0) {
-        throw new Error('Berat Badan Wajib di Isi');
-    }
-    if (!umur && umur !== 0) {
-        throw new Error('Umur Wajib di Isi');
+        throw new Error("Berat Badan Wajib di Isi");
     }
     if (!tgllahir) {
-        throw new Error('Tanggal Lahir Wajib di Isi');
+        throw new Error("Tanggal Lahir Wajib di Isi");
     }
     if (!cvBuffer) {
-        throw new Error('CV Wajib di Isi');
+        throw new Error("CV Wajib di Isi");
     }
     if (!kkBuffer) {
-        throw new Error('KK Wajib di Isi');
+        throw new Error("KK Wajib di Isi");
     }
     if (!ktpBuffer) {
-        throw new Error('Ktp Wajib di Isi');
+        throw new Error("Ktp Wajib di Isi");
     }
     if (!ktp_pendampingBuffer) {
-        throw new Error('Ktp Orang Tua / pendamping Wajib di Isi');
+        throw new Error("Ktp Orang Tua / pendamping Wajib di Isi");
     }
     if (!ijazahBuffer) {
-        throw new Error('Ijazah Wajib di Isi');
+        throw new Error("Ijazah Wajib di Isi");
     }
     if (!tujuan) {
-        throw new Error('Tujuan Wajib di Isi');
+        throw new Error("Tujuan Wajib di Isi");
     }
     if (!telephone) {
-        throw new Error('Telephone Wajib di Isi');
+        throw new Error("Telephone Wajib di Isi");
     }
     if (!dana) {
-        throw new Error('Dana Wajin di Isi');
+        throw new Error("Dana Wajin di Isi");
+    }
+
+    if (!agama) {
+        throw new Error("Agama Wajib di Isi");
+    }
+
+    if (!pernikahan) {
+        throw new Error("Pernikahan Wajib di Isi");
+    }
+
+    if (!tempatLahir) {
+        throw new Error("Tempat Lahir Wajib di Isi");
     }
 
     const generateUniqueCode = async () => {
@@ -88,23 +103,20 @@ export const addKandidat = async ({
     // konversi
     const tinggiFloat = parseFloat(tinggi);
     if (isNaN(tinggiFloat)) {
-        throw new Error('Tinggi Wajib Angka');
+        throw new Error("Tinggi Wajib Angka");
     }
 
     const beratBadanFloat = parseFloat(berat_badan);
     if (isNaN(beratBadanFloat)) {
-        throw new Error('Berat Badan Wajib Angka');
-    }
-
-    const umurInt = parseInt(umur);
-    if (isNaN(umurInt)) {
-        throw new Error('Umur Wajib Angka');
+        throw new Error("Berat Badan Wajib Angka");
     }
 
     const tanggalLahirDate = new Date(tgllahir);
     if (isNaN(tanggalLahirDate.getTime())) {
-        throw new Error('Format Tanggal Lahir Tidak Valid');
+        throw new Error("Format Tanggal Lahir Tidak Valid");
     }
+
+    const umur = calculateAge(tanggalLahirDate);
 
     // kompress gambar
     const compressedKK = await compressToWebp(kkBuffer, `KK-${nama}`);
@@ -113,34 +125,34 @@ export const addKandidat = async ({
     const compressedIjazah = await compressToWebp(ijazahBuffer, `ijazah-${nama}`);
 
     const uploadKK = await uploadToCloudinary(compressedKK, {
-        folder: 'Kandidat/KK',
+        folder: "Kandidat/KK",
         publicId: `KK-${nama}-${Date.now()}`,
-        resourceType: 'image',
+        resourceType: "image",
     });
 
     const uploadKtp = await uploadToCloudinary(compressedKtp, {
-        folder: 'Kandidat/Ktp',
+        folder: "Kandidat/Ktp",
         publicId: `ktp-${nama}-${Date.now()}`,
-        resourceType: 'image',
+        resourceType: "image",
     });
 
     const uploadKtpPendamping = await uploadToCloudinary(compressedKtpPendamping, {
-        folder: 'Kandidat/Ktp-Pendamping',
+        folder: "Kandidat/Ktp-Pendamping",
         publicId: `ktp-pendamping-${nama}-${Date.now()}`,
-        resourceType: 'image',
+        resourceType: "image",
     });
 
     const uploadIjazah = await uploadToCloudinary(compressedIjazah, {
-        folder: 'Kandidat/Ijazah',
+        folder: "Kandidat/Ijazah",
         publicId: `ijazah-${nama}-${Date.now()}`,
-        resourceType: 'image',
+        resourceType: "image",
     });
 
     // upload pdf
     const uploadCv = await uploadToCloudinary(cvBuffer, {
-        folder: 'Kandidat/Cv',
+        folder: "Kandidat/Cv",
         publicId: `cv-${nama}-${Date.now()}.pdf`,
-        resourceType: 'raw',
+        resourceType: "raw",
     });
 
     // karna sertifikat todak wajib
@@ -148,30 +160,35 @@ export const addKandidat = async ({
 
     if (sertifikatBuffer) {
         uploadSertifikat = await uploadToCloudinary(sertifikatBuffer, {
-            folder: 'Kandidat/Sertifikat',
+            folder: "Kandidat/Sertifikat",
             publicId: `sertifikat-${nama}-${Date.now()}.pdf`,
-            resourceType: 'raw',
+            resourceType: "raw",
         });
     }
 
-    const statusOJK = dana === 'MANDIRI' ? 'MANDIRI' : 'BELUM';
+    const statusOJK = dana === "MANDIRI" ? "MANDIRI" : "BELUM";
     const addKandidat = await prisma.kandidat.create({
         data: {
             kodeRegistrasi: code,
             nama,
             tinggi: tinggiFloat,
             berat_badan: beratBadanFloat,
-            umur: umurInt,
             tgllahir: tanggalLahirDate,
             ...(status && { status }),
             tujuan,
             pendidikan,
-            asal,
+            provinsiId,
+            kabupatenId,
             bidang_pekerjaan,
             pic,
             keterangan,
             telephone,
+            telephone_sekunder,
+            email,
+            tempatLahir,
             ...(dana && { dana }),
+            ...(agama && { agama }),
+            umur,
 
             ojk: statusOJK,
 
@@ -206,13 +223,14 @@ export const updateKandidat = async (
         nama,
         tinggi,
         berat_badan,
-        umur,
         telephone,
+        telephone_sekunder,
         tgllahir,
         status,
         dana,
         pendidikan,
-        asal,
+        provinsiId,
+        kabupatenId,
         bidang_pekerjaan,
         pic,
         keterangan,
@@ -227,21 +245,21 @@ export const updateKandidat = async (
     },
 ) => {
     if (!userId) {
-        throw new Error('User Tidak Ter Autentikasi');
+        throw new Error("User Tidak Ter Autentikasi");
     }
     const existing = await prisma.kandidat.findUnique({
         where: { id },
     });
 
     if (!existing) {
-        throw new Error('Kandidat Tidak Ditemukan');
+        throw new Error("Kandidat Tidak Ditemukan");
     }
 
-    const isAdmin = userRole === 'Admin' || userRole === 'SuperAdmin';
+    const isAdmin = userRole === "Admin" || userRole === "SuperAdmin";
     const nextStatus = isAdmin && status !== undefined ? status : existing.status;
     const nextDana = dana ?? existing.dana;
 
-    const derivedOjk = nextDana === 'MANDIRI' ? 'MANDIRI' : nextDana === 'TALANG' ? 'LOLOS' : existing.ojk;
+    const derivedOjk = nextDana === "MANDIRI" ? "MANDIRI" : nextDana === "TALANG" ? "LOLOS" : existing.ojk;
 
     const nextOjk = isAdmin && ojk !== undefined ? ojk : derivedOjk;
 
@@ -249,7 +267,7 @@ export const updateKandidat = async (
     if (tinggi !== undefined) {
         tinggiFloat = parseFloat(tinggi);
         if (isNaN(tinggiFloat)) {
-            throw new Error('Tinggi Wajib Angka');
+            throw new Error("Tinggi Wajib Angka");
         }
     }
 
@@ -257,15 +275,7 @@ export const updateKandidat = async (
     if (berat_badan !== undefined) {
         beratBadanFloat = parseFloat(berat_badan);
         if (isNaN(beratBadanFloat)) {
-            throw new Error('Berat Badan Wajib Angka');
-        }
-    }
-
-    let umurInt = existing.umur;
-    if (umur !== undefined) {
-        umurInt = parseInt(umur);
-        if (isNaN(umurInt)) {
-            throw new Error('Umur Wajib Angka');
+            throw new Error("Berat Badan Wajib Angka");
         }
     }
 
@@ -273,9 +283,11 @@ export const updateKandidat = async (
     if (tgllahir !== undefined) {
         tanggalLahirDate = new Date(tgllahir);
         if (isNaN(tanggalLahirDate.getTime())) {
-            throw new Error('Format Tanggal Lahir Tidak Valid');
+            throw new Error("Format Tanggal Lahir Tidak Valid");
         }
     }
+
+    const umur = calculateAge(tanggalLahirDate);
 
     // upload file baru kalo di kirim
     let newCvUpload = null;
@@ -288,56 +300,53 @@ export const updateKandidat = async (
     try {
         if (cvBuffer) {
             newCvUpload = await uploadToCloudinary(cvBuffer, {
-                folder: 'Kandidat/Cv',
+                folder: "Kandidat/Cv",
                 publicId: `cv-${existing.nama}-${Date.now()}.pdf`,
-                resourceType: 'raw',
+                resourceType: "raw",
             });
         }
 
         if (kkBuffer) {
             const compressedKK = await compressToWebp(kkBuffer, `KK-${existing.nama}`);
             newKkUpload = await uploadToCloudinary(compressedKK, {
-                folder: 'Kandidat/KK',
+                folder: "Kandidat/KK",
                 publicId: `KK-${existing.nama}-${Date.now()}`,
-                resourceType: 'image',
+                resourceType: "image",
             });
         }
 
         if (ktpBuffer) {
             const compressedKtp = await compressToWebp(ktpBuffer, `ktp-${existing.nama}`);
             newKtpUpload = await uploadToCloudinary(compressedKtp, {
-                folder: 'Kandidat/Ktp',
+                folder: "Kandidat/Ktp",
                 publicId: `ktp-${existing.nama}-${Date.now()}`,
-                resourceType: 'image',
+                resourceType: "image",
             });
         }
 
         if (ktp_pendampingBuffer) {
-            const compressedKtpPendamping = await compressToWebp(
-                ktp_pendampingBuffer,
-                `ktp-pendamping-${existing.nama}`,
-            );
+            const compressedKtpPendamping = await compressToWebp(ktp_pendampingBuffer, `ktp-pendamping-${existing.nama}`);
             newKtpPendampingUpload = await uploadToCloudinary(compressedKtpPendamping, {
-                folder: 'Kandidat/Ktp-Pendamping',
+                folder: "Kandidat/Ktp-Pendamping",
                 publicId: `ktp-pendamping-${existing.nama}-${Date.now()}`,
-                resourceType: 'image',
+                resourceType: "image",
             });
         }
 
         if (ijazahBuffer) {
             const compressedIjazah = await compressToWebp(ijazahBuffer, `ijazah-${existing.nama}`);
             newIjazahUpload = await uploadToCloudinary(compressedIjazah, {
-                folder: 'Kandidat/Ijazah',
+                folder: "Kandidat/Ijazah",
                 publicId: `ijazah-${existing.nama}-${Date.now()}`,
-                resourceType: 'image',
+                resourceType: "image",
             });
         }
 
         if (sertifikatBuffer) {
             newSertifikatUpload = await uploadToCloudinary(sertifikatBuffer, {
-                folder: 'Kandidat/Sertifikat',
+                folder: "Kandidat/Sertifikat",
                 publicId: `sertifikat-${existing.nama}-${Date.now()}.pdf`,
-                resourceType: 'raw',
+                resourceType: "raw",
             });
         }
 
@@ -347,7 +356,6 @@ export const updateKandidat = async (
                 nama: nama ?? existing.nama,
                 tinggi: tinggiFloat,
                 berat_badan: beratBadanFloat,
-                umur: umurInt,
                 tgllahir: tanggalLahirDate,
                 status: nextStatus,
                 userId,
@@ -355,11 +363,14 @@ export const updateKandidat = async (
                 dana: nextDana,
                 ojk: nextOjk,
                 pendidikan: pendidikan ?? existing.pendidikan,
-                asal: asal ?? existing.asal,
+                provinsiId: provinsiId ?? existing.provinsiId,
+                kabupatenId: kabupatenId ?? existing.kabupatenId,
                 bidang_pekerjaan: bidang_pekerjaan ?? existing.bidang_pekerjaan,
                 pic: pic ?? existing.pic,
                 keterangan: keterangan ?? existing.keterangan,
                 telephone: telephone ?? existing.telephone,
+                telephone_sekunder: telephone_sekunder ?? existing.telephone_sekunder,
+                umur: umur ?? existing.agama,
 
                 cvUrl: newCvUpload?.url ?? existing.cvUrl,
                 cvPublicId: newCvUpload?.publicId ?? existing.cvPublicId,
@@ -390,34 +401,33 @@ export const updateKandidat = async (
 
         // hapus file lama
         if (newCvUpload && existing.cvPublicId) {
-            await deleteFromCloudinary(existing.cvPublicId, { resourceType: 'raw' });
+            await deleteFromCloudinary(existing.cvPublicId, { resourceType: "raw" });
         }
         if (newKkUpload && existing.kkPublicId) {
-            await deleteFromCloudinary(existing.kkPublicId, { resourceType: 'image' });
+            await deleteFromCloudinary(existing.kkPublicId, { resourceType: "image" });
         }
         if (newKtpUpload && existing.ktpPublicId) {
-            await deleteFromCloudinary(existing.ktpPublicId, { resourceType: 'image' });
+            await deleteFromCloudinary(existing.ktpPublicId, { resourceType: "image" });
         }
         if (newKtpPendampingUpload && existing.ktp_pendampingPublicId) {
-            await deleteFromCloudinary(existing.ktp_pendampingPublicId, { resourceType: 'image' });
+            await deleteFromCloudinary(existing.ktp_pendampingPublicId, { resourceType: "image" });
         }
         if (newIjazahUpload && existing.ijazahPublicId) {
-            await deleteFromCloudinary(existing.ijazahPublicId, { resourceType: 'image' });
+            await deleteFromCloudinary(existing.ijazahPublicId, { resourceType: "image" });
         }
         if (newSertifikatUpload && existing.sertifikatPublicId) {
-            await deleteFromCloudinary(existing.sertifikatPublicId, { resourceType: 'raw' });
+            await deleteFromCloudinary(existing.sertifikatPublicId, { resourceType: "raw" });
         }
 
         return updated;
     } catch (error) {
         // hapus file baru kalau update gagal
-        if (newCvUpload) await deleteFromCloudinary(newCvUpload.publicId, { resourceType: 'raw' });
-        if (newKkUpload) await deleteFromCloudinary(newKkUpload.publicId, { resourceType: 'image' });
-        if (newKtpUpload) await deleteFromCloudinary(newKtpUpload.publicId, { resourceType: 'image' });
-        if (newKtpPendampingUpload)
-            await deleteFromCloudinary(newKtpPendampingUpload.publicId, { resourceType: 'image' });
-        if (newIjazahUpload) await deleteFromCloudinary(newIjazahUpload.publicId, { resourceType: 'image' });
-        if (newSertifikatUpload) await deleteFromCloudinary(newSertifikatUpload.publicId, { resourceType: 'raw' });
+        if (newCvUpload) await deleteFromCloudinary(newCvUpload.publicId, { resourceType: "raw" });
+        if (newKkUpload) await deleteFromCloudinary(newKkUpload.publicId, { resourceType: "image" });
+        if (newKtpUpload) await deleteFromCloudinary(newKtpUpload.publicId, { resourceType: "image" });
+        if (newKtpPendampingUpload) await deleteFromCloudinary(newKtpPendampingUpload.publicId, { resourceType: "image" });
+        if (newIjazahUpload) await deleteFromCloudinary(newIjazahUpload.publicId, { resourceType: "image" });
+        if (newSertifikatUpload) await deleteFromCloudinary(newSertifikatUpload.publicId, { resourceType: "raw" });
 
         throw error;
     }
@@ -429,27 +439,27 @@ export const deleteKandidat = async (id) => {
     });
 
     if (!existingKandidat) {
-        throw new Error('Kandidat Tidak Ditemukan');
+        throw new Error("Kandidat Tidak Ditemukan");
     }
 
     const removedKandidat = await prisma.kandidat.delete({
         where: { id },
     });
 
-    await deleteFromCloudinary(existingKandidat.cvPublicId, { resourceType: 'raw' });
-    await deleteFromCloudinary(existingKandidat.kkPublicId, { resourceType: 'image' });
-    await deleteFromCloudinary(existingKandidat.ktpPublicId, { resourceType: 'image' });
-    await deleteFromCloudinary(existingKandidat.ktp_pendampingPublicId, { resourceType: 'image' });
-    await deleteFromCloudinary(existingKandidat.ijazahPublicId, { resourceType: 'image' });
+    await deleteFromCloudinary(existingKandidat.cvPublicId, { resourceType: "raw" });
+    await deleteFromCloudinary(existingKandidat.kkPublicId, { resourceType: "image" });
+    await deleteFromCloudinary(existingKandidat.ktpPublicId, { resourceType: "image" });
+    await deleteFromCloudinary(existingKandidat.ktp_pendampingPublicId, { resourceType: "image" });
+    await deleteFromCloudinary(existingKandidat.ijazahPublicId, { resourceType: "image" });
 
     if (existingKandidat.sertifikatPublicId) {
-        await deleteFromCloudinary(existingKandidat.sertifikatPublicId, { resourceType: 'raw' });
+        await deleteFromCloudinary(existingKandidat.sertifikatPublicId, { resourceType: "raw" });
     }
 
     return removedKandidat;
 };
 
-export const getAllkandidat = async (page = 1, limit = 10, search = '') => {
+export const getAllkandidat = async (page = 1, limit = 10, search = "") => {
     const skip = (page - 1) * limit;
 
     const where = search.trim()
@@ -458,36 +468,25 @@ export const getAllkandidat = async (page = 1, limit = 10, search = '') => {
                   {
                       nama: {
                           contains: search.trim(),
-                          mode: 'insensitive',
+                          mode: "insensitive",
                       },
                   },
                   {
                       tujuan: {
                           contains: search.trim(),
-                          mode: 'insensitive',
+                          mode: "insensitive",
                       },
                   },
                   {
                       pendidikan: {
                           contains: search.trim(),
-                          mode: 'insensitive',
-                      },
-                  },
-                  {
-                      asal: {
-                          contains: search.trim(),
-                          mode: 'insensitive',
+                          mode: "insensitive",
                       },
                   },
                   {
                       bidang_pekerjaan: {
                           contains: search.trim(),
-                          mode: 'insensitive',
-                      },
-                  },
-                  {
-                      telephone: {
-                          contains: search.trim(),
+                          mode: "insensitive",
                       },
                   },
               ],
@@ -505,17 +504,33 @@ export const getAllkandidat = async (page = 1, limit = 10, search = '') => {
                 nama: true,
                 tinggi: true,
                 berat_badan: true,
-                umur: true,
                 tgllahir: true,
                 status: true,
                 tujuan: true,
                 ojk: true,
                 pendidikan: true,
-                asal: true,
+                provinsi: {
+                    select: {
+                        id: true,
+                        namaProvinsi: true,
+                    },
+                },
+                kabupaten: {
+                    select: {
+                        id: true,
+                        namaKabupaten: true,
+                        provinsiId: true,
+                    },
+                },
+                agama: true,
+                pernikahan: true,
+                umur: true,
+                tempatLahir: true,
                 bidang_pekerjaan: true,
                 pic: true,
                 keterangan: true,
                 telephone: true,
+                telephone_sekunder: true,
                 dana: true,
                 createdAt: true,
                 updatedAt: true,
@@ -534,7 +549,7 @@ export const getAllkandidat = async (page = 1, limit = 10, search = '') => {
                 sertifikatPublicId: true,
                 user: { select: { id: true, username: true } },
             },
-            orderBy: { createdAt: 'desc' },
+            orderBy: { createdAt: "desc" },
         }),
 
         prisma.kandidat.count({
@@ -544,21 +559,21 @@ export const getAllkandidat = async (page = 1, limit = 10, search = '') => {
         prisma.kandidat.count({
             where: {
                 ...where,
-                status: 'DRAFT',
+                status: "DRAFT",
             },
         }),
 
         prisma.kandidat.count({
             where: {
                 ...where,
-                status: 'TERVERIFIKASI',
+                status: "TERVERIFIKASI",
             },
         }),
 
         prisma.kandidat.count({
             where: {
                 ...where,
-                status: 'PERBAIKAN',
+                status: "PERBAIKAN",
             },
         }),
     ]);
@@ -578,18 +593,18 @@ export const getAllkandidat = async (page = 1, limit = 10, search = '') => {
 };
 
 const FILE_FIELD_CONFIG = {
-    cvUrl: { publicIdField: 'cvPublicId', resourceType: 'raw', format: 'pdf' },
-    sertifikatUrl: { publicIdField: 'sertifikatPublicId', resourceType: 'raw', format: 'pdf' },
-    kkUrl: { publicIdField: 'kkPublicId', resourceType: 'image', format: 'webp' },
-    ktpUrl: { publicIdField: 'ktpPublicId', resourceType: 'image', format: 'webp' },
-    ktp_pendampingUrl: { publicIdField: 'ktp_pendampingPublicId', resourceType: 'image', format: 'webp' },
-    ijazahUrl: { publicIdField: 'ijazahPublicId', resourceType: 'image', format: 'webp' },
+    cvUrl: { publicIdField: "cvPublicId", resourceType: "raw", format: "pdf" },
+    sertifikatUrl: { publicIdField: "sertifikatPublicId", resourceType: "raw", format: "pdf" },
+    kkUrl: { publicIdField: "kkPublicId", resourceType: "image", format: "webp" },
+    ktpUrl: { publicIdField: "ktpPublicId", resourceType: "image", format: "webp" },
+    ktp_pendampingUrl: { publicIdField: "ktp_pendampingPublicId", resourceType: "image", format: "webp" },
+    ijazahUrl: { publicIdField: "ijazahPublicId", resourceType: "image", format: "webp" },
 };
 
 export const getKandidatFile = async (id, field) => {
     const config = FILE_FIELD_CONFIG[field];
     if (!config) {
-        throw new Error('Jenis file tidak valid');
+        throw new Error("Jenis file tidak valid");
     }
 
     const kandidat = await prisma.kandidat.findUnique({
@@ -603,12 +618,12 @@ export const getKandidatFile = async (id, field) => {
     });
 
     if (!kandidat) {
-        throw new Error('Kandidat tidak ditemukan');
+        throw new Error("Kandidat tidak ditemukan");
     }
 
     const publicId = kandidat[config.publicIdField];
     if (!publicId) {
-        throw new Error('File tidak tersedia');
+        throw new Error("File tidak tersedia");
     }
 
     const signedUrl = privateFileUrl(publicId, config.resourceType, config.format);
@@ -628,17 +643,32 @@ export const getOneKandidat = async (id) => {
             nama: true,
             tinggi: true,
             berat_badan: true,
-            umur: true,
             tgllahir: true,
             status: true,
             tujuan: true,
             ojk: true,
             pendidikan: true,
-            asal: true,
+            provinsi: {
+                select: {
+                    id: true,
+                    namaProvinsi: true,
+                },
+            },
+            kabupaten: {
+                select: {
+                    id: true,
+                    namaKabupaten: true,
+                },
+            },
+            agama: true,
+            pernikahan: true,
+            umur: true,
+            tempatLahir: true,
             bidang_pekerjaan: true,
             pic: true,
             keterangan: true,
             telephone: true,
+            telephone_sekunder: true,
             dana: true,
             cvUrl: true,
             kkUrl: true,
@@ -653,20 +683,20 @@ export const getOneKandidat = async (id) => {
     return result;
 };
 
-export const getKandidatCalon = async (page = 1, limit = 10, search = '') => {
+export const getKandidatCalon = async (page = 1, limit = 10, search = "") => {
     const skip = (page - 1) * limit;
 
     const where = {
-        ojk: { in: ['LOLOS', 'MANDIRI'] },
-        dana: { in: ['MANDIRI', 'TALANG'] },
-        status: 'TERVERIFIKASI',
-        OR: [{ biayaPelatihan: 'BELUM' }, { suratPernyataan: 'BELUM' }],
+        ojk: { in: ["LOLOS", "MANDIRI"] },
+        dana: { in: ["MANDIRI", "TALANG"] },
+        status: "TERVERIFIKASI",
+        OR: [{ biayaPelatihan: "BELUM" }, { suratPernyataan: "BELUM" }],
         kelasInggrisId: null,
         kelasJepangId: null,
         ...(search.trim() && {
             nama: {
                 contains: search.trim(),
-                mode: 'insensitive',
+                mode: "insensitive",
             },
         }),
     };
@@ -679,10 +709,25 @@ export const getKandidatCalon = async (page = 1, limit = 10, search = '') => {
             select: {
                 id: true,
                 nama: true,
-                umur: true,
                 telephone: true,
+                telephone_sekunder: true,
                 pendidikan: true,
-                asal: true,
+                provinsi: {
+                    select: {
+                        id: true,
+                        namaProvinsi: true,
+                    },
+                },
+                kabupaten: {
+                    select: {
+                        id: true,
+                        namaKabupaten: true,
+                    },
+                },
+                agama: true,
+                pernikahan: true,
+                umur: true,
+                tempatLahir: true,
                 tujuan: true,
                 ojk: true,
                 status: true,
@@ -694,9 +739,9 @@ export const getKandidatCalon = async (page = 1, limit = 10, search = '') => {
 
         prisma.kandidat.count({ where }),
 
-        prisma.kandidat.count({ where: { ...where, dana: 'TALANG' } }),
+        prisma.kandidat.count({ where: { ...where, dana: "TALANG" } }),
 
-        prisma.kandidat.count({ where: { ...where, dana: 'MANDIRI' } }),
+        prisma.kandidat.count({ where: { ...where, dana: "MANDIRI" } }),
     ]);
 
     return {
@@ -746,15 +791,30 @@ export const getFromKodeRegistrasi = async (kodeRegistrasi) => {
             nama: true,
             tinggi: true,
             berat_badan: true,
-            umur: true,
             tgllahir: true,
             status: true,
             tujuan: true,
             ojk: true,
             pendidikan: true,
-            asal: true,
+            provinsi: {
+                select: {
+                    id: true,
+                    namaProvinsi: true,
+                },
+            },
+            kabupaten: {
+                select: {
+                    id: true,
+                    namaKabupaten: true,
+                },
+            },
+            agama: true,
+            pernikahan: true,
+            umur: true,
+            tempatLahir: true,
             dana: true,
             telephone: true,
+            telephone_sekunder: true,
             keterangan: true,
         },
     });
@@ -795,21 +855,21 @@ export const getFromKodeRegistrasi = async (kodeRegistrasi) => {
 //     return kandidat;
 // };
 
-export const getKandidatForClass = async (page = 1, limit = 10, search = '') => {
+export const getKandidatForClass = async (page = 1, limit = 10, search = "") => {
     const skip = (page - 1) * limit;
 
     const where = {
-        ojk: { in: ['LOLOS', 'MANDIRI'] },
-        dana: { in: ['MANDIRI', 'TALANG'] },
-        biayaPelatihan: { in: ['DP', 'BULAN_1', 'BULAN_2', 'BULAN_3', 'BULAN_4', 'LUNAS'] },
-        suratPernyataan: 'SUDAH',
-        status: 'TERVERIFIKASI',
+        ojk: { in: ["LOLOS", "MANDIRI"] },
+        dana: { in: ["MANDIRI", "TALANG"] },
+        biayaPelatihan: { in: ["DP", "BULAN_1", "BULAN_2", "BULAN_3", "BULAN_4", "LUNAS"] },
+        suratPernyataan: "SUDAH",
+        status: "TERVERIFIKASI",
         kelasInggrisId: null,
         kelasJepangId: null,
         ...(search.trim() && {
             nama: {
                 contains: search.trim(),
-                mode: 'insensitive',
+                mode: "insensitive",
             },
         }),
     };
@@ -820,11 +880,26 @@ export const getKandidatForClass = async (page = 1, limit = 10, search = '') => 
             select: {
                 id: true,
                 nama: true,
-                umur: true,
                 createdAt: true,
                 telephone: true,
+                telephone_sekunder: true,
                 pendidikan: true,
-                asal: true,
+                provinsi: {
+                    select: {
+                        id: true,
+                        namaProvinsi: true,
+                    },
+                },
+                kabupaten: {
+                    select: {
+                        id: true,
+                        namaKabupaten: true,
+                    },
+                },
+                agama: true,
+                pernikahan: true,
+                umur: true,
+                tempatLahir: true,
                 tujuan: true,
                 biayaPelatihan: true,
                 suratPernyataan: true,
@@ -833,7 +908,7 @@ export const getKandidatForClass = async (page = 1, limit = 10, search = '') => 
                 kelasInggris: true,
                 kelasJepang: true,
             },
-            orderBy: { nama: 'asc' },
+            orderBy: { nama: "asc" },
             skip,
             take: limit,
         }),
@@ -853,7 +928,7 @@ export const getKandidatForClass = async (page = 1, limit = 10, search = '') => 
 
 export const addSiswaToClass = async ({ kandidatId, tipeKelas }) => {
     if (!kandidatId) {
-        throw new Error('Kandidat tidak ditemukan');
+        throw new Error("Kandidat tidak ditemukan");
     }
 
     const kandidat = await prisma.kandidat.findUnique({
@@ -863,10 +938,10 @@ export const addSiswaToClass = async ({ kandidatId, tipeKelas }) => {
     });
 
     if (!kandidat) {
-        throw new Error('Kandidat Tidak di Temukan');
+        throw new Error("Kandidat Tidak di Temukan");
     }
 
-    if (tipeKelas === 'belum') {
+    if (tipeKelas === "belum") {
         const update = await prisma.kandidat.update({
             where: { id: kandidatId },
             data: {
@@ -883,24 +958,21 @@ export const addSiswaToClass = async ({ kandidatId, tipeKelas }) => {
     }
 
     let kelas;
-    if (tipeKelas === 'jepang') {
+    if (tipeKelas === "jepang") {
         kelas = await prisma.kelasJepang.findFirst();
-    } else if (tipeKelas === 'inggris') {
+    } else if (tipeKelas === "inggris") {
         kelas = await prisma.kelasInggris.findFirst();
     } else {
-        throw new Error('Kelas Tidak di Temukan');
+        throw new Error("Kelas Tidak di Temukan");
     }
 
     if (!kelas) {
-        throw new Error(`Kelas ${tipeKelas === 'jepang' ? 'Jepang' : 'Inggris'} tidak ditemukan`);
+        throw new Error(`Kelas ${tipeKelas === "jepang" ? "Jepang" : "Inggris"} tidak ditemukan`);
     }
 
     const update = await prisma.kandidat.update({
         where: { id: kandidatId },
-        data:
-            tipeKelas === 'jepang'
-                ? { kelasJepangId: kelas.id, kelasInggrisId: null }
-                : { kelasInggrisId: kelas.id, kelasJepangId: null },
+        data: tipeKelas === "jepang" ? { kelasJepangId: kelas.id, kelasInggrisId: null } : { kelasInggrisId: kelas.id, kelasJepangId: null },
         include: {
             kelasJepang: true,
             kelasInggris: true,
@@ -910,20 +982,20 @@ export const addSiswaToClass = async ({ kandidatId, tipeKelas }) => {
     return update;
 };
 
-export const getKandidatKelasInggris = async (page = 1, limit = 10, search = '') => {
+export const getKandidatKelasInggris = async (page = 1, limit = 10, search = "") => {
     const skip = (page - 1) * limit;
     const where = {
-        ojk: { in: ['LOLOS', 'MANDIRI'] },
-        dana: { in: ['MANDIRI', 'TALANG'] },
-        biayaPelatihan: { in: ['DP', 'BULAN_1', 'BULAN_2', 'BULAN_3', 'BULAN_4', 'LUNAS'] },
-        suratPernyataan: 'SUDAH',
-        status: 'TERVERIFIKASI',
+        ojk: { in: ["LOLOS", "MANDIRI"] },
+        dana: { in: ["MANDIRI", "TALANG"] },
+        biayaPelatihan: { in: ["DP", "BULAN_1", "BULAN_2", "BULAN_3", "BULAN_4", "LUNAS"] },
+        suratPernyataan: "SUDAH",
+        status: "TERVERIFIKASI",
         kelasInggrisId: { not: null },
         kelasJepangId: null,
         ...(search.trim() && {
             nama: {
                 contains: search.trim(),
-                mode: 'insensitive',
+                mode: "insensitive",
             },
         }),
     };
@@ -936,11 +1008,26 @@ export const getKandidatKelasInggris = async (page = 1, limit = 10, search = '')
             select: {
                 id: true,
                 nama: true,
-                umur: true,
                 createdAt: true,
                 telephone: true,
+                telephone_sekunder: true,
                 pendidikan: true,
-                asal: true,
+                provinsi: {
+                    select: {
+                        id: true,
+                        namaProvinsi: true,
+                    },
+                },
+                kabupaten: {
+                    select: {
+                        id: true,
+                        namaKabupaten: true,
+                    },
+                },
+                agama: true,
+                pernikahan: true,
+                umur: true,
+                tempatLahir: true,
                 tujuan: true,
                 biayaPelatihan: true,
                 suratPernyataan: true,
@@ -966,21 +1053,21 @@ export const getKandidatKelasInggris = async (page = 1, limit = 10, search = '')
     };
 };
 
-export const getKandidatKelasJepang = async (page = 1, limit = 10, search = '') => {
+export const getKandidatKelasJepang = async (page = 1, limit = 10, search = "") => {
     const skip = (page - 1) * limit;
 
     const where = {
-        ojk: { in: ['LOLOS', 'MANDIRI'] },
-        dana: { in: ['MANDIRI', 'TALANG'] },
-        biayaPelatihan: { in: ['DP', 'BULAN_1', 'BULAN_2', 'BULAN_3', 'BULAN_4', 'LUNAS'] },
-        suratPernyataan: 'SUDAH',
-        status: 'TERVERIFIKASI',
+        ojk: { in: ["LOLOS", "MANDIRI"] },
+        dana: { in: ["MANDIRI", "TALANG"] },
+        biayaPelatihan: { in: ["DP", "BULAN_1", "BULAN_2", "BULAN_3", "BULAN_4", "LUNAS"] },
+        suratPernyataan: "SUDAH",
+        status: "TERVERIFIKASI",
         kelasInggrisId: null,
         kelasJepangId: { not: null },
         ...(search.trim() && {
             nama: {
                 contains: search.trim(),
-                mode: 'insensitive',
+                mode: "insensitive",
             },
         }),
     };
@@ -993,11 +1080,26 @@ export const getKandidatKelasJepang = async (page = 1, limit = 10, search = '') 
             select: {
                 id: true,
                 nama: true,
-                umur: true,
                 createdAt: true,
                 telephone: true,
+                telephone_sekunder: true,
                 pendidikan: true,
-                asal: true,
+                provinsi: {
+                    select: {
+                        id: true,
+                        namaProvinsi: true,
+                    },
+                },
+                kabupaten: {
+                    select: {
+                        id: true,
+                        namaKabupaten: true,
+                    },
+                },
+                agama: true,
+                pernikahan: true,
+                umur: true,
+                tempatLahir: true,
                 tujuan: true,
                 biayaPelatihan: true,
                 suratPernyataan: true,
@@ -1023,15 +1125,15 @@ export const getKandidatKelasJepang = async (page = 1, limit = 10, search = '') 
     };
 };
 
-export const getKandidatMundur = async (page = 1, limit = 10, search = '') => {
+export const getKandidatMundur = async (page = 1, limit = 10, search = "") => {
     const skip = (page - 1) * limit;
 
     const where = {
-        status: 'MUNDUR',
+        status: "MUNDUR",
         ...(search.trim() && {
             nama: {
                 contains: search.trim(),
-                mode: 'insensitive',
+                mode: "insensitive",
             },
         }),
     };
@@ -1042,11 +1144,26 @@ export const getKandidatMundur = async (page = 1, limit = 10, search = '') => {
             select: {
                 id: true,
                 nama: true,
-                umur: true,
                 createdAt: true,
                 telephone: true,
+                telephone_sekunder: true,
                 pendidikan: true,
-                asal: true,
+                provinsi: {
+                    select: {
+                        id: true,
+                        namaProvinsi: true,
+                    },
+                },
+                kabupaten: {
+                    select: {
+                        id: true,
+                        namaKabupaten: true,
+                    },
+                },
+                agama: true,
+                pernikahan: true,
+                umur: true,
+                tempatLahir: true,
                 tujuan: true,
                 biayaPelatihan: true,
                 suratPernyataan: true,
@@ -1056,7 +1173,7 @@ export const getKandidatMundur = async (page = 1, limit = 10, search = '') => {
                 kelasInggris: true,
                 kelasJepang: true,
             },
-            orderBy: { nama: 'asc' },
+            orderBy: { nama: "asc" },
             skip,
             take: limit,
         }),

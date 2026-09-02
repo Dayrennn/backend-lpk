@@ -42,21 +42,31 @@ model Otp {
 model Kandidat {
     id              String   @id @default(uuid())
     kodeRegistrasi String? @unique
+    email String?
+    umur Int?
     userId String?
     nama String
     tinggi Float
     berat_badan Float
-    umur Int
+
+    tempatLahir String
     tgllahir DateTime
     status Status @default(DRAFT)
     tujuan String?
     ojk StatusOJK @default(BELUM)
     pendidikan String 
-    asal String
+    agama Agama 
+    pernikahan Pernikahan @default(BELUM)
+    
+    // asal
+    provinsiId String
+    kabupatenId String
+
     bidang_pekerjaan String?
     pic String?
     keterangan String?
     telephone String?
+    telephone_sekunder String?
     dana Dana?
 
     kelasJepangId String?
@@ -87,6 +97,24 @@ model Kandidat {
 
     kelasJepang KelasJepang? @relation(fields: [kelasJepangId], references: [id])
     kelasInggris KelasInggris? @relation(fields: [kelasInggrisId], references: [id])
+    provinsi Provinsi @relation(fields: [provinsiId], references: [id])
+    kabupaten Kabupaten @relation(fields: [kabupatenId], references: [id])
+}
+
+enum Agama {
+  ISLAM
+  KRISTEN
+  KATOLIK
+  HINDU
+  BUDHA
+  KONGHUCU
+}
+
+enum Pernikahan {
+  BELUM
+  MENIKAH
+  CERAI_HIDUP
+  CERAI_MATI
 }
 
 enum Status {
@@ -135,5 +163,22 @@ model KelasInggris {
   id String @id @default(uuid())
   deskripsi String
 
+  kandidat Kandidat[]
+}
+
+model Provinsi {
+  id String @id @default(uuid())
+  namaProvinsi String @unique
+
+  kandidat Kandidat[]
+  kabupaten Kabupaten[]
+}
+
+model Kabupaten {
+  id String @id @default(uuid())
+  namaKabupaten String @unique
+  provinsiId String
+
+  provinsi Provinsi @relation(fields: [provinsiId], references: [id])
   kandidat Kandidat[]
 }
