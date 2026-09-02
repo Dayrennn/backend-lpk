@@ -16,7 +16,7 @@ const port = 3000;
 app.use(morgan("dev"));
 app.use(
     cors({
-        origin: ["http://localhost:3001", "https://delta-abadi-international.netlify.app/"],
+        origin: ["http://localhost:3001", "https://delta-abadi-international.netlify.app/", "https://frontend-lpk.vercel.app/"],
         credentials: true,
     }),
 );
