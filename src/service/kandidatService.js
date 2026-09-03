@@ -690,7 +690,7 @@ export const getKandidatCalon = async (page = 1, limit = 10, search = "") => {
         ojk: { in: ["LOLOS", "MANDIRI"] },
         dana: { in: ["MANDIRI", "TALANG"] },
         status: "TERVERIFIKASI",
-        OR: [{ biayaPelatihan: "BELUM" }, { suratPernyataan: "BELUM" }],
+        OR: [{ biayaPelatihan: { in: ["BELUM", "TIDAK_PELATIHAN"] } }, { suratPernyataan: "BELUM" }],
         kelasInggrisId: null,
         kelasJepangId: null,
         ...(search.trim() && {
@@ -701,7 +701,7 @@ export const getKandidatCalon = async (page = 1, limit = 10, search = "") => {
         }),
     };
 
-    const [kandidat, totalKandidat, totalTalang, totalMandiri] = await prisma.$transaction([
+    const [kandidat, totalKandidat, totalTalang, totalMandiri, totalTidakPelatihan] = await prisma.$transaction([
         prisma.kandidat.findMany({
             where,
             skip,
@@ -724,6 +724,7 @@ export const getKandidatCalon = async (page = 1, limit = 10, search = "") => {
                         namaKabupaten: true,
                     },
                 },
+                interview: true,
                 agama: true,
                 pernikahan: true,
                 umur: true,
@@ -742,6 +743,7 @@ export const getKandidatCalon = async (page = 1, limit = 10, search = "") => {
         prisma.kandidat.count({ where: { ...where, dana: "TALANG" } }),
 
         prisma.kandidat.count({ where: { ...where, dana: "MANDIRI" } }),
+        prisma.kandidat.count({ where: { ...where, biayaPelatihan: "TIDAK_PELATIHAN" } }),
     ]);
 
     return {
@@ -752,6 +754,7 @@ export const getKandidatCalon = async (page = 1, limit = 10, search = "") => {
             total: totalKandidat,
             totalTalang,
             totalMandiri,
+            totalTidakPelatihan,
             totalPages: Math.ceil(totalKandidat / limit),
         },
     };
@@ -769,6 +772,22 @@ export const inputPersyaratandanDp = async ({ id, biayaPelatihan, suratPernyataa
             nama: true,
             biayaPelatihan: true,
             suratPernyataan: true,
+        },
+    });
+
+    return input;
+};
+
+export const inputInterview = async ({ id, interview }) => {
+    const input = await prisma.kandidat.update({
+        where: { id },
+        data: {
+            interview,
+        },
+        select: {
+            id: true,
+            nama: true,
+            interview: true,
         },
     });
 
@@ -821,39 +840,6 @@ export const getFromKodeRegistrasi = async (kodeRegistrasi) => {
 
     return result;
 };
-// export const getFromKodeRegistrasi = async (kodeRegistrasi) => {
-//     console.log('KODE YANG DICARI:', JSON.stringify(kodeRegistrasi));
-
-//     const semuaKandidat = await prisma.kandidat.findMany({
-//         select: {
-//             id: true,
-//             kodeRegistrasi: true,
-//             nama: true,
-//         },
-//         orderBy: {
-//             createdAt: 'desc',
-//         },
-//         take: 20,
-//     });
-
-//     console.log('=== DATA YANG DILIHAT BACKEND ===');
-//     console.table(semuaKandidat);
-//     console.log('================================');
-
-//     const kandidat = await prisma.kandidat.findUnique({
-//         where: {
-//             kodeRegistrasi: kodeRegistrasi.trim(),
-//         },
-//     });
-
-//     console.log('HASIL FIND UNIQUE:', kandidat);
-
-//     if (!kandidat) {
-//         throw new Error(`Kandidat dengan nomor regis ${kodeRegistrasi} tidak ditemukan`);
-//     }
-
-//     return kandidat;
-// };
 
 export const getKandidatForClass = async (page = 1, limit = 10, search = "") => {
     const skip = (page - 1) * limit;
@@ -1188,4 +1174,164 @@ export const getKandidatMundur = async (page = 1, limit = 10, search = "") => {
             totalPages: Math.ceil(totalKandidat / limit),
         },
     };
+};
+
+export const getCalonPMI = async (page = 1, limit = 10, search = "") => {
+    const skip = (page - 1) * limit;
+
+    const where = {
+        interview: "DITERIMA",
+        ...(search.trim() && {
+            nama: {
+                contains: search.trim(),
+                mode: "insensitive",
+            },
+        }),
+    };
+
+    const [kandidat, totalKandidat] = await prisma.$transaction([
+        prisma.kandidat.findMany({
+            where,
+            skip,
+            select: {
+                id: true,
+                nama: true,
+                provinsi: {
+                    select: {
+                        id: true,
+                        namaProvinsi: true,
+                    },
+                },
+                kabupaten: {
+                    select: {
+                        id: true,
+                        namaKabupaten: true,
+                    },
+                },
+                tempatLahir: true,
+                telephone: true,
+                telephone_sekunder: true,
+                namaOrangTua: true,
+                telephoneOrtu: true,
+                namaKerabat: true,
+                telephoneKerabat: true,
+                tujuan: true,
+                job: true,
+                dana: true,
+                tanggalTerima: true,
+                tanggalBerangkat: true,
+                perusahaanPenempatan: true,
+                kontrak: true,
+                tempatPelatihan: true,
+                alamatSesuaiKTP: true,
+            },
+        }),
+        prisma.kandidat.count({ where }),
+    ]);
+    return {
+        kandidat,
+        pagination: {
+            page,
+            limit,
+            total: totalKandidat,
+            totalPages: Math.ceil(totalKandidat / limit),
+        },
+    };
+};
+
+export const simpanDataPMI = async ({
+    id,
+    nama,
+    alamatSesuaiKTP,
+    telephone,
+    telephone_sekunder,
+    namaOrangTua,
+    telephoneOrtu,
+    namaKerabat,
+    telephoneKerabat,
+    job,
+    tanggalTerima,
+    tanggalBerangkat,
+    perusahaanPenempatan,
+    kontrak,
+    tempatPelatihan,
+}) => {
+    const existing = await prisma.kandidat.findUnique({
+        where: { id },
+    });
+
+    if (!existing) {
+        throw new Error("Kandidat tidak ditemukan");
+    }
+
+    const updated = await prisma.kandidat.update({
+        where: { id },
+        data: {
+            nama,
+            alamatSesuaiKTP,
+            telephone,
+            telephone_sekunder,
+            namaOrangTua,
+            telephoneOrtu,
+            namaKerabat,
+            telephoneKerabat,
+            job,
+            tanggalTerima,
+            tanggalBerangkat,
+            perusahaanPenempatan,
+            kontrak,
+            tempatPelatihan,
+        },
+        select: {
+            id: true,
+            nama: true,
+            alamatSesuaiKTP: true,
+            telephone: true,
+            telephone_sekunder: true,
+            namaOrangTua: true,
+            telephoneOrtu: true,
+            namaKerabat: true,
+            telephoneKerabat: true,
+            job: true,
+            tanggalTerima: true,
+            tanggalBerangkat: true,
+            perusahaanPenempatan: true,
+            kontrak: true,
+            tempatPelatihan: true,
+        },
+    });
+    return updated;
+};
+
+export const getOneCPMI = async (id) => {
+    const existing = await prisma.kandidat.findUnique({
+        where: { id },
+    });
+
+    if (!existing) {
+        throw new Error("Kandidat Tidak Ditemukan");
+    }
+
+    const result = await prisma.kandidat.findUnique({
+        where: { id },
+        select: {
+            
+            nama: true,
+            alamatSesuaiKTP: true,
+            telephone: true,
+            telephone_sekunder: true,
+            namaOrangTua: true,
+            telephoneOrtu: true,
+            namaKerabat: true,
+            telephoneKerabat: true,
+            job: true,
+            tanggalTerima: true,
+            tanggalBerangkat: true,
+            perusahaanPenempatan: true,
+            kontrak: true,
+            tempatPelatihan: true,
+        },
+    });
+
+    return result;
 };

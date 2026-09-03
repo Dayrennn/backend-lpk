@@ -57,6 +57,21 @@ model Kandidat {
     pendidikan String 
     agama Agama 
     pernikahan Pernikahan @default(BELUM)
+    interview Interview @default(BELUM)
+
+    namaOrangTua String?
+    telephoneOrtu String?
+
+    namaKerabat String?
+    telephoneKerabat String?
+
+    job String?
+    tanggalTerima DateTime?
+    tanggalBerangkat DateTime?
+    perusahaanPenempatan String?
+    kontrak String?
+    tempatPelatihan String?
+    alamatSesuaiKTP String?
     
     // asal
     provinsiId String
@@ -145,11 +160,19 @@ enum PembayaranPelatihan {
   BULAN_3
   BULAN_4
   LUNAS
+  TIDAK_PELATIHAN
 }
 
 enum SuratPernyataan {
   SUDAH
   BELUM
+}
+
+enum Interview {
+  BELUM
+  SIAP_INTERVIEW
+  MENUNGGU_HASIL
+  DITERIMA
 }
 
 model KelasJepang {

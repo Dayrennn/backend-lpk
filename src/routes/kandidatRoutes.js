@@ -11,10 +11,14 @@ import {
     seeAllKandidatCalon,
     seeAllKandidatInggris,
     seeAllKandidatJepang,
+    seeKandidatCPMI,
     seeKandidatForClass,
     seeKandidatMundur,
     seeOneKandidat,
+    submitInterview,
     submitPersyaratandanDp,
+    inputKandidatCPMI,
+    seeOneCPMI
 } from '../controller/kandidatController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 
@@ -35,6 +39,8 @@ router.post(
 
 router.post('/check', checkKandidat);
 router.post('/simpan-persyaratan/:id', authMiddleware, submitPersyaratandanDp);
+router.put('/input-interview/:id', authMiddleware, submitInterview);
+router.put('/input-data-cpmi/:id', authMiddleware, inputKandidatCPMI);
 router.post('/:kandidatId/kelas', authMiddleware, createKandidatToClass);
 
 router.put(
@@ -56,7 +62,9 @@ router.delete('/delete-kandidat/:id', authMiddleware, removeKandidat);
 router.get('/', authMiddleware, seeAllKandidat);
 
 router.get('/kandidat-mundur', authMiddleware, seeKandidatMundur);
-router.get('/calon-pekerja', authMiddleware, seeAllKandidatCalon);
+router.get('/calon-peserta', authMiddleware, seeAllKandidatCalon);
+router.get('/data-cpmi', authMiddleware, seeKandidatCPMI)
+router.get('/data-cpmi/:id', authMiddleware, seeOneCPMI)
 router.get('/kandidat-kelas', authMiddleware, seeKandidatForClass);
 router.get('/kelas-inggris', authMiddleware, seeAllKandidatInggris);
 router.get('/kelas-jepang', authMiddleware, seeAllKandidatJepang);

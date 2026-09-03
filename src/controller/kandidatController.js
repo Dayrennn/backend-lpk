@@ -1,4 +1,4 @@
-import { kandidatSchema, updateCalonSchema, updateKandidatSchema } from "../schemas/kandidatSchema.js";
+import { kandidatSchema, updateCalonSchema, updateKandidatSchema, updateInterviewSchema, updateKandidatCPMISchema } from "../schemas/kandidatSchema.js";
 import {
     addKandidat,
     deleteKandidat,
@@ -14,6 +14,10 @@ import {
     getKandidatKelasInggris,
     getKandidatKelasJepang,
     getKandidatMundur,
+    inputInterview,
+    getCalonPMI,
+    simpanDataPMI,
+    getOneCPMI,
 } from "../service/kandidatService.js";
 
 export const createKandidat = async (req, res) => {
@@ -30,7 +34,27 @@ export const createKandidat = async (req, res) => {
             });
         }
 
-        const { nama, tinggi, berat_badan, tgllahir, tujuan, status, pendidikan, provinsiId, kabupatenId, bidang_pekerjaan, pic, keterangan, telephone, telephone_sekunder, dana, agama, pernikahan, email, tempatLahir } = result.data;
+        const {
+            nama,
+            tinggi,
+            berat_badan,
+            tgllahir,
+            tujuan,
+            status,
+            pendidikan,
+            provinsiId,
+            kabupatenId,
+            bidang_pekerjaan,
+            pic,
+            keterangan,
+            telephone,
+            telephone_sekunder,
+            dana,
+            agama,
+            pernikahan,
+            email,
+            tempatLahir,
+        } = result.data;
 
         const files = req.files;
 
@@ -58,7 +82,7 @@ export const createKandidat = async (req, res) => {
             telephone_sekunder,
             dana,
             agama,
-            pernikahan, 
+            pernikahan,
             email,
             tempatLahir,
 
@@ -96,7 +120,28 @@ export const modifyKandidat = async (req, res) => {
             });
         }
 
-        const { nama, tinggi, berat_badan, tgllahir, tujuan, status, ojk, pendidikan, provinsiId, kabupatenId, bidang_pekerjaan, pic, keterangan, telephone, telephone_sekunder, dana, agama, pernikahan, email, tempatLahir } = result.data;
+        const {
+            nama,
+            tinggi,
+            berat_badan,
+            tgllahir,
+            tujuan,
+            status,
+            ojk,
+            pendidikan,
+            provinsiId,
+            kabupatenId,
+            bidang_pekerjaan,
+            pic,
+            keterangan,
+            telephone,
+            telephone_sekunder,
+            dana,
+            agama,
+            pernikahan,
+            email,
+            tempatLahir,
+        } = result.data;
 
         const files = req.files;
 
@@ -266,6 +311,33 @@ export const submitPersyaratandanDp = async (req, res) => {
     }
 };
 
+export const submitInterview = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = updateInterviewSchema.safeParse(req.body);
+
+        if (!result.success) {
+            const errors = result.error.flatten().fieldErrors;
+
+            return res.status(400).json({
+                message: "Validasi Gagal",
+                errors,
+            });
+        }
+
+        const { interview } = result.data;
+        const input = await inputInterview({ id, interview });
+        res.status(200).json({
+            message: "Berhasil Input Interview Kandidat",
+            data: input,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
 export const checkKandidat = async (req, res) => {
     try {
         const { kodeRegistrasi } = req.body;
@@ -362,6 +434,101 @@ export const seeKandidatMundur = async (req, res) => {
         const result = await getKandidatMundur(page, limit, search);
         res.status(200).json({
             message: "Berhasil Ambil Data Kandidat Mundur",
+            data: result,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
+export const seeKandidatCPMI = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const { search = "" } = req.query;
+
+        const result = await getCalonPMI(page, limit, search);
+        res.status(200).json({
+            message: "Berhasil Ambil Data CPMI",
+            data: result,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
+export const inputKandidatCPMI = async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log('BODY:', req.body)
+        const result = updateKandidatCPMISchema.safeParse(req.body);
+
+        if (!result.success) {
+            const errors = result.error.flatten().fieldErrors;
+            const flat = result.error.flatten();
+            return res.status(400).json({
+                message: "Validasi Gagal",
+                errors,
+                formErrors: flat.formErrors,
+            });
+        }
+
+        const {
+            nama,
+            alamatSesuaiKTP,
+            telephone,
+            telephone_sekunder,
+            namaOrangTua,
+            telephoneOrtu,
+            namaKerabat,
+            telephoneKerabat,
+            job,
+            tanggalTerima,
+            tanggalBerangkat,
+            perusahaanPenempatan,
+            kontrak,
+            tempatPelatihan,
+        } = result.data;
+
+        const input = await simpanDataPMI({
+            id,
+            nama,
+            alamatSesuaiKTP,
+            telephone,
+            telephone_sekunder,
+            namaOrangTua,
+            telephoneOrtu,
+            namaKerabat,
+            telephoneKerabat,
+            job,
+            tanggalTerima,
+            tanggalBerangkat,
+            perusahaanPenempatan,
+            kontrak,
+            tempatPelatihan,
+        });
+
+        res.status(200).json({
+            message: "Berhasil Simpan Data CPMI",
+            data: input,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
+export const seeOneCPMI = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await getOneCPMI(id);
+        res.status(200).json({
+            message: "Berhasil Ambil Satu Data CPMI",
             data: result,
         });
     } catch (error) {
