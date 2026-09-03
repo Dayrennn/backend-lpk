@@ -701,7 +701,7 @@ export const getKandidatCalon = async (page = 1, limit = 10, search = "") => {
         }),
     };
 
-    const [kandidat, totalKandidat, totalTalang, totalMandiri, totalTidakPelatihan] = await prisma.$transaction([
+    const [kandidat, totalKandidat, totalTalang, totalMandiri, totalTidakPelatihan, totalTerima] = await prisma.$transaction([
         prisma.kandidat.findMany({
             where,
             skip,
@@ -744,6 +744,7 @@ export const getKandidatCalon = async (page = 1, limit = 10, search = "") => {
 
         prisma.kandidat.count({ where: { ...where, dana: "MANDIRI" } }),
         prisma.kandidat.count({ where: { ...where, biayaPelatihan: "TIDAK_PELATIHAN" } }),
+        prisma.kandidat.count({ where: {...where, interview: "DITERIMA"} })
     ]);
 
     return {
@@ -755,6 +756,7 @@ export const getKandidatCalon = async (page = 1, limit = 10, search = "") => {
             totalTalang,
             totalMandiri,
             totalTidakPelatihan,
+            totalTerima,
             totalPages: Math.ceil(totalKandidat / limit),
         },
     };
@@ -1264,6 +1266,16 @@ export const simpanDataPMI = async ({
         throw new Error("Kandidat tidak ditemukan");
     }
 
+    const tanggalTerimaDate = new Date(tanggalTerima);
+    if (isNaN(tanggalTerimaDate.getTime())) {
+        throw new Error("Format Tanggal Lahir Tidak Valid");
+    }
+
+    const tanggalBerangkatDate = new Date(tanggalBerangkat);
+    if (isNaN(tanggalBerangkatDate.getTime())) {
+        throw new Error("Format Tanggal Lahir Tidak Valid");
+    }
+
     const updated = await prisma.kandidat.update({
         where: { id },
         data: {
@@ -1276,8 +1288,8 @@ export const simpanDataPMI = async ({
             namaKerabat,
             telephoneKerabat,
             job,
-            tanggalTerima,
-            tanggalBerangkat,
+            tanggalTerima: tanggalTerimaDate,
+            tanggalBerangkat: tanggalBerangkatDate,
             perusahaanPenempatan,
             kontrak,
             tempatPelatihan,
@@ -1315,7 +1327,6 @@ export const getOneCPMI = async (id) => {
     const result = await prisma.kandidat.findUnique({
         where: { id },
         select: {
-            
             nama: true,
             alamatSesuaiKTP: true,
             telephone: true,
