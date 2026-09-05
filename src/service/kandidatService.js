@@ -690,6 +690,7 @@ export const getKandidatCalon = async (page = 1, limit = 10, search = "") => {
         ojk: { in: ["LOLOS", "MANDIRI"] },
         dana: { in: ["MANDIRI", "TALANG"] },
         status: "TERVERIFIKASI",
+        interview: { in: ["BELUM", "SIAP_INTERVIEW", "MENUNGGU_HASIL"] },
         OR: [{ biayaPelatihan: { in: ["BELUM", "TIDAK_PELATIHAN"] } }, { suratPernyataan: "BELUM" }],
         kelasInggrisId: null,
         kelasJepangId: null,
@@ -744,7 +745,7 @@ export const getKandidatCalon = async (page = 1, limit = 10, search = "") => {
 
         prisma.kandidat.count({ where: { ...where, dana: "MANDIRI" } }),
         prisma.kandidat.count({ where: { ...where, biayaPelatihan: "TIDAK_PELATIHAN" } }),
-        prisma.kandidat.count({ where: {...where, interview: "DITERIMA"} })
+        prisma.kandidat.count({ where: { ...where, interview: "DITERIMA" } }),
     ]);
 
     return {
@@ -852,6 +853,7 @@ export const getKandidatForClass = async (page = 1, limit = 10, search = "") => 
         biayaPelatihan: { in: ["DP", "BULAN_1", "BULAN_2", "BULAN_3", "BULAN_4", "LUNAS"] },
         suratPernyataan: "SUDAH",
         status: "TERVERIFIKASI",
+        interview: { in: ["BELUM", "SIAP_INTERVIEW", "MENUNGGU_HASIL"] },
         kelasInggrisId: null,
         kelasJepangId: null,
         ...(search.trim() && {
@@ -977,6 +979,7 @@ export const getKandidatKelasInggris = async (page = 1, limit = 10, search = "")
         dana: { in: ["MANDIRI", "TALANG"] },
         biayaPelatihan: { in: ["DP", "BULAN_1", "BULAN_2", "BULAN_3", "BULAN_4", "LUNAS"] },
         suratPernyataan: "SUDAH",
+        interview: { in: ["BELUM", "SIAP_INTERVIEW", "MENUNGGU_HASIL"] },
         status: "TERVERIFIKASI",
         kelasInggrisId: { not: null },
         kelasJepangId: null,
@@ -1025,6 +1028,7 @@ export const getKandidatKelasInggris = async (page = 1, limit = 10, search = "")
                 kelasJepang: true,
                 kelasInggrisId: true,
                 kelasJepangId: true,
+                interview: true,
             },
         }),
         prisma.kandidat.count({ where }),
@@ -1049,6 +1053,7 @@ export const getKandidatKelasJepang = async (page = 1, limit = 10, search = "") 
         dana: { in: ["MANDIRI", "TALANG"] },
         biayaPelatihan: { in: ["DP", "BULAN_1", "BULAN_2", "BULAN_3", "BULAN_4", "LUNAS"] },
         suratPernyataan: "SUDAH",
+        interview: { in: ["BELUM", "SIAP_INTERVIEW", "MENUNGGU_HASIL"] },
         status: "TERVERIFIKASI",
         kelasInggrisId: null,
         kelasJepangId: { not: null },
@@ -1097,6 +1102,7 @@ export const getKandidatKelasJepang = async (page = 1, limit = 10, search = "") 
                 kelasJepang: true,
                 kelasInggrisId: true,
                 kelasJepangId: true,
+                interview: true,
             },
         }),
         prisma.kandidat.count({ where }),
@@ -1226,6 +1232,7 @@ export const getCalonPMI = async (page = 1, limit = 10, search = "") => {
                 kontrak: true,
                 tempatPelatihan: true,
                 alamatSesuaiKTP: true,
+                interview: true,
             },
         }),
         prisma.kandidat.count({ where }),
