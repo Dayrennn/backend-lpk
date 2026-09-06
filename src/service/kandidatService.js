@@ -8,6 +8,41 @@ const generateCode = () => {
     return randomInt(100000, 1000000).toString();
 };
 
+export const addKandidatAdmin = async ({ nama, telephone, pic, cvBuffer, userId, pendaftaran }) => {
+    if (!nama) {
+        throw new Error("Nama Wajib di Isi");
+    }
+    if (!telephone) {
+        throw new Error("Telephone Wajib di Isi");
+    }
+    if (!userId) {
+        throw new Error("User Tidak ter Autentikasi");
+    }
+
+    let uploadCV = null;
+    if (cvBuffer) {
+        uploadCV = await uploadToCloudinary(cvBuffer, {
+            folder: "Kandidat/Cv",
+            publicId: `cv-${nama}-${Date.now()}.pdf`,
+            resourceType: "raw",
+        });
+    }
+
+    const create = await prisma.kandidat.create({
+        data: {
+            nama,
+            telephone,
+            cvUrl: uploadCV?.url ?? null, // karena opsional
+            cvPublicId: uploadCV?.publicId ?? null, // karena opsional
+            userId,
+            pic,
+            pendaftaran: "ADMIN",
+        },
+    });
+
+    return create;
+};
+
 export const addKandidat = async ({
     kodeRegistrasi,
     nama,
@@ -29,6 +64,7 @@ export const addKandidat = async ({
     email,
     tempatLahir,
     dana,
+    pendaftaran,
     cvBuffer,
     kkBuffer,
     ktpBuffer,
@@ -189,6 +225,7 @@ export const addKandidat = async ({
             ...(dana && { dana }),
             ...(agama && { agama }),
             umur,
+            pendaftaran: "PENDAFTARAN",
 
             ojk: statusOJK,
 
@@ -256,23 +293,29 @@ export const updateKandidat = async (
     }
 
     const isAdmin = userRole === "Admin" || userRole === "SuperAdmin";
-    const nextStatus = isAdmin && status !== undefined ? status : existing.status;
-    const nextDana = dana ?? existing.dana;
+    const nextStatus = isAdmin ? (status !== undefined ? status : existing.status) : existing.status;
+    const nextDana = dana !== undefined ? dana : existing.dana;
 
     const derivedOjk = nextDana === "MANDIRI" ? "MANDIRI" : nextDana === "TALANG" ? "LOLOS" : existing.ojk;
 
-    const nextOjk = isAdmin && ojk !== undefined ? ojk : derivedOjk;
+    const nextOjk = isAdmin ? (ojk !== undefined ? ojk : derivedOjk) : derivedOjk;
 
+    // Tinggi: boleh null (dikosongkan), tapi kalau ada isinya wajib angka
     let tinggiFloat = existing.tinggi;
-    if (tinggi !== undefined) {
+    if (tinggi === null) {
+        tinggiFloat = null;
+    } else if (tinggi !== undefined) {
         tinggiFloat = parseFloat(tinggi);
         if (isNaN(tinggiFloat)) {
             throw new Error("Tinggi Wajib Angka");
         }
     }
 
+    // Berat badan: sama seperti tinggi
     let beratBadanFloat = existing.berat_badan;
-    if (berat_badan !== undefined) {
+    if (berat_badan === null) {
+        beratBadanFloat = null;
+    } else if (berat_badan !== undefined) {
         beratBadanFloat = parseFloat(berat_badan);
         if (isNaN(beratBadanFloat)) {
             throw new Error("Berat Badan Wajib Angka");
@@ -280,14 +323,23 @@ export const updateKandidat = async (
     }
 
     let tanggalLahirDate = existing.tgllahir;
-    if (tgllahir !== undefined) {
+    let umur = existing.umur;
+
+    if (tgllahir === null) {
+        // Kalau tanggal lahir sengaja dikosongkan
+        tanggalLahirDate = null;
+        umur = null;
+    } else if (tgllahir !== undefined) {
+        // Kalau tanggal lahir diubah
         tanggalLahirDate = new Date(tgllahir);
+
         if (isNaN(tanggalLahirDate.getTime())) {
             throw new Error("Format Tanggal Lahir Tidak Valid");
         }
-    }
 
-    const umur = calculateAge(tanggalLahirDate);
+        // Umur otomatis dihitung dari tanggal lahir
+        umur = calculateAge(tanggalLahirDate);
+    }
 
     // upload file baru kalo di kirim
     let newCvUpload = null;
@@ -353,24 +405,24 @@ export const updateKandidat = async (
         const updated = await prisma.kandidat.update({
             where: { id },
             data: {
-                nama: nama ?? existing.nama,
+                nama: nama !== undefined ? nama : existing.nama,
                 tinggi: tinggiFloat,
                 berat_badan: beratBadanFloat,
                 tgllahir: tanggalLahirDate,
                 status: nextStatus,
                 userId,
-                tujuan: tujuan ?? existing.tujuan,
+                tujuan: tujuan !== undefined ? tujuan : existing.tujuan,
                 dana: nextDana,
                 ojk: nextOjk,
-                pendidikan: pendidikan ?? existing.pendidikan,
-                provinsiId: provinsiId ?? existing.provinsiId,
-                kabupatenId: kabupatenId ?? existing.kabupatenId,
-                bidang_pekerjaan: bidang_pekerjaan ?? existing.bidang_pekerjaan,
-                pic: pic ?? existing.pic,
-                keterangan: keterangan ?? existing.keterangan,
-                telephone: telephone ?? existing.telephone,
-                telephone_sekunder: telephone_sekunder ?? existing.telephone_sekunder,
-                umur: umur ?? existing.agama,
+                pendidikan: pendidikan !== undefined ? pendidikan : existing.pendidikan,
+                provinsiId: provinsiId !== undefined ? provinsiId : existing.provinsiId,
+                kabupatenId: kabupatenId !== undefined ? kabupatenId : existing.kabupatenId,
+                bidang_pekerjaan: bidang_pekerjaan !== undefined ? bidang_pekerjaan : existing.bidang_pekerjaan,
+                pic: pic !== undefined ? pic : existing.pic,
+                keterangan: keterangan !== undefined ? keterangan : existing.keterangan,
+                telephone: telephone !== undefined ? telephone : existing.telephone,
+                telephone_sekunder: telephone_sekunder !== undefined ? telephone_sekunder : existing.telephone_sekunder,
+                umur: umur,
 
                 cvUrl: newCvUpload?.url ?? existing.cvUrl,
                 cvPublicId: newCvUpload?.publicId ?? existing.cvPublicId,
@@ -459,39 +511,40 @@ export const deleteKandidat = async (id) => {
     return removedKandidat;
 };
 
-export const getAllkandidat = async (page = 1, limit = 10, search = "") => {
+export const getAllKandidatAwal = async (page = 1, limit = 10, search = "") => {
     const skip = (page - 1) * limit;
 
-    const where = search.trim()
-        ? {
-              OR: [
-                  {
-                      nama: {
-                          contains: search.trim(),
-                          mode: "insensitive",
-                      },
-                  },
-                  {
-                      tujuan: {
-                          contains: search.trim(),
-                          mode: "insensitive",
-                      },
-                  },
-                  {
-                      pendidikan: {
-                          contains: search.trim(),
-                          mode: "insensitive",
-                      },
-                  },
-                  {
-                      bidang_pekerjaan: {
-                          contains: search.trim(),
-                          mode: "insensitive",
-                      },
-                  },
-              ],
-          }
-        : {};
+    const where = {
+        pendaftaran: "ADMIN",
+        ...(search.trim() && {
+            OR: [
+                {
+                    nama: {
+                        contains: search.trim(),
+                        mode: "insensitive",
+                    },
+                },
+                {
+                    tujuan: {
+                        contains: search.trim(),
+                        mode: "insensitive",
+                    },
+                },
+                {
+                    pendidikan: {
+                        contains: search.trim(),
+                        mode: "insensitive",
+                    },
+                },
+                {
+                    bidang_pekerjaan: {
+                        contains: search.trim(),
+                        mode: "insensitive",
+                    },
+                },
+            ],
+        }),
+    };
 
     const [kandidat, totalKandidat, kandidatDraft, kandidatVerifikasi, kandidatPerbaikan] = await prisma.$transaction([
         prisma.kandidat.findMany({
@@ -522,6 +575,142 @@ export const getAllkandidat = async (page = 1, limit = 10, search = "") => {
                         provinsiId: true,
                     },
                 },
+                pendaftaran: true,
+                agama: true,
+                pernikahan: true,
+                umur: true,
+                tempatLahir: true,
+                bidang_pekerjaan: true,
+                pic: true,
+                keterangan: true,
+                telephone: true,
+                telephone_sekunder: true,
+                dana: true,
+                createdAt: true,
+                updatedAt: true,
+
+                cvUrl: true,
+                kkUrl: true,
+                ktpUrl: true,
+                ktp_pendampingUrl: true,
+                ijazahUrl: true,
+                sertifikatUrl: true,
+                cvPublicId: true,
+                kkPublicId: true,
+                ktpPublicId: true,
+                ktp_pendampingPublicId: true,
+                ijazahPublicId: true,
+                sertifikatPublicId: true,
+                user: { select: { id: true, username: true } },
+            },
+            orderBy: { createdAt: "desc" },
+        }),
+
+        prisma.kandidat.count({
+            where,
+        }),
+
+        prisma.kandidat.count({
+            where: {
+                ...where,
+                status: "DRAFT",
+            },
+        }),
+
+        prisma.kandidat.count({
+            where: {
+                ...where,
+                status: "TERVERIFIKASI",
+            },
+        }),
+
+        prisma.kandidat.count({
+            where: {
+                ...where,
+                status: "PERBAIKAN",
+            },
+        }),
+    ]);
+
+    return {
+        kandidat,
+        data: {
+            page,
+            limit,
+            total: totalKandidat,
+            kandidatDraft,
+            kandidatVerifikasi,
+            kandidatPerbaikan,
+            totalPages: Math.ceil(totalKandidat / limit),
+        },
+    };
+};
+
+export const getAllkandidat = async (page = 1, limit = 10, search = "") => {
+    const skip = (page - 1) * limit;
+
+    const where = {
+        pendaftaran: "PENDAFTARAN",
+        ...(search.trim() && {
+            OR: [
+                {
+                    nama: {
+                        contains: search.trim(),
+                        mode: "insensitive",
+                    },
+                },
+                {
+                    tujuan: {
+                        contains: search.trim(),
+                        mode: "insensitive",
+                    },
+                },
+                {
+                    pendidikan: {
+                        contains: search.trim(),
+                        mode: "insensitive",
+                    },
+                },
+                {
+                    bidang_pekerjaan: {
+                        contains: search.trim(),
+                        mode: "insensitive",
+                    },
+                },
+            ],
+        }),
+    };
+
+    const [kandidat, totalKandidat, kandidatDraft, kandidatVerifikasi, kandidatPerbaikan] = await prisma.$transaction([
+        prisma.kandidat.findMany({
+            where,
+            skip,
+            take: limit,
+            select: {
+                id: true,
+                kodeRegistrasi: true,
+                nama: true,
+                tinggi: true,
+                berat_badan: true,
+                tgllahir: true,
+                status: true,
+                tujuan: true,
+                ojk: true,
+                pendidikan: true,
+                provinsi: {
+                    select: {
+                        id: true,
+                        namaProvinsi: true,
+                    },
+                },
+                kabupaten: {
+                    select: {
+                        id: true,
+                        namaKabupaten: true,
+                        provinsiId: true,
+                    },
+                },
+                pendaftaran: true,
                 agama: true,
                 pernikahan: true,
                 umur: true,

@@ -7,6 +7,13 @@ export const pembayaranPelatihanEnum = z.enum(["BELUM", "DP", "BULAN_1", "BULAN_
 export const suratPernyataanEnum = z.enum(["SUDAH", "BELUM"]);
 export const agamaEnum = z.enum(["ISLAM", "KRISTEN", "KATOLIK", "HINDU", "BUDHA", "KONGHUCU"]);
 export const pernikahanEnum = z.enum(["BELUM", "MENIKAH", "CERAI_HIDUP", "CERAI_MATI"]);
+export const daftarEnum = z.enum(["PENDAFTARAN", "ADMIN"]);
+
+export const kandidatAdminSchema = z.object({
+    nama: z.string().min(1, "Nama wajib diisi").max(100, "Nama maksimal 100 karakter"),
+    telephone: z.string().min(1, "Nomor telfon wajib diisi"),
+    userId: z.string().min(1, "Akun Tidak ter Autentikasi"),
+});
 
 export const kandidatSchema = z.object({
     nama: z.string().min(1, "Nama wajib diisi").max(100, "Nama maksimal 100 karakter"),
@@ -26,6 +33,8 @@ export const kandidatSchema = z.object({
     pendidikan: z.string().min(1, "Pendidikan wajib diisi"),
 
     telephone: z.string().min(1, "Nomor telfon wajib diisi"),
+
+    pendaftaran: daftarEnum,
 
     agama: agamaEnum,
 

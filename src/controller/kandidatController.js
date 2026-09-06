@@ -1,4 +1,4 @@
-import { kandidatSchema, updateCalonSchema, updateKandidatSchema, updateInterviewSchema, updateKandidatCPMISchema } from "../schemas/kandidatSchema.js";
+import { kandidatSchema, updateCalonSchema, updateKandidatSchema, updateInterviewSchema, updateKandidatCPMISchema, kandidatAdminSchema } from "../schemas/kandidatSchema.js";
 import {
     addKandidat,
     deleteKandidat,
@@ -18,7 +18,38 @@ import {
     getCalonPMI,
     simpanDataPMI,
     getOneCPMI,
+    addKandidatAdmin,
+    getAllKandidatAwal,
 } from "../service/kandidatService.js";
+
+export const createKandidatAdmin = async (req, res) => {
+    try {
+        const result = kandidatAdminSchema.safeParse(req.body);
+        if (!result.success) {
+            const errors = result.error.flatten().fieldErrors;
+
+            return res.status(400).json({
+                message: "Validasi Gagal",
+                errors,
+            });
+        }
+
+        const { nama, telephone, pic, userId } = result.data;
+
+        // const files = req.files;
+        const cvBuffer = req.file?.buffer;
+
+        const create = await addKandidatAdmin({ nama, telephone, pic, userId, cvBuffer });
+        return res.status(201).json({
+            message: "Kandidat berhasil ditambahkan",
+            data: create,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
 
 export const createKandidat = async (req, res) => {
     try {
@@ -219,6 +250,24 @@ export const seeAllKandidat = async (req, res) => {
         const result = await getAllkandidat(page, limit, search);
         res.status(200).json({
             message: "Berhasil Mengambil Data Kandidat",
+            data: result,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
+export const seeAllKandidatAdmin = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const { search = "" } = req.query;
+
+        const result = await getAllKandidatAwal(page, limit, search);
+        res.status(200).json({
+            message: "Berhasil Mengambil Data Kandidat Dari Data Awal",
             data: result,
         });
     } catch (error) {
@@ -464,7 +513,7 @@ export const seeKandidatCPMI = async (req, res) => {
 export const inputKandidatCPMI = async (req, res) => {
     try {
         const { id } = req.params;
-        console.log('BODY:', req.body)
+        console.log("BODY:", req.body);
         const result = updateKandidatCPMISchema.safeParse(req.body);
 
         if (!result.success) {

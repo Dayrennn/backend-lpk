@@ -18,7 +18,9 @@ import {
     submitInterview,
     submitPersyaratandanDp,
     inputKandidatCPMI,
-    seeOneCPMI
+    seeOneCPMI,
+    createKandidatAdmin,
+    seeAllKandidatAdmin
 } from '../controller/kandidatController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 
@@ -36,6 +38,8 @@ router.post(
     ]),
     createKandidat,
 );
+
+router.post('/add-kandidat-admin', upload.single({ name: "cv", maxCount: 1 }), authMiddleware, createKandidatAdmin)
 
 router.post('/check', checkKandidat);
 router.post('/simpan-persyaratan/:id', authMiddleware, submitPersyaratandanDp);
@@ -60,7 +64,7 @@ router.put(
 router.delete('/delete-kandidat/:id', authMiddleware, removeKandidat);
 
 router.get('/', authMiddleware, seeAllKandidat);
-
+router.get('/awal', authMiddleware, seeAllKandidatAdmin)
 router.get('/kandidat-mundur', authMiddleware, seeKandidatMundur);
 router.get('/calon-peserta', authMiddleware, seeAllKandidatCalon);
 router.get('/data-cpmi', authMiddleware, seeKandidatCPMI)

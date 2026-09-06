@@ -46,18 +46,20 @@ model Kandidat {
     umur Int?
     userId String?
     nama String
-    tinggi Float
-    berat_badan Float
+    tinggi Float?
+    berat_badan Float?
 
-    tempatLahir String
-    tgllahir DateTime
+    tempatLahir String?
+    tgllahir DateTime?
     status Status @default(DRAFT)
     tujuan String?
     ojk StatusOJK @default(BELUM)
-    pendidikan String 
-    agama Agama 
+    pendidikan String?
+    agama Agama?
     pernikahan Pernikahan @default(BELUM)
     interview Interview @default(BELUM)
+
+    pendaftaran Daftar?
 
     namaOrangTua String?
     telephoneOrtu String?
@@ -74,8 +76,8 @@ model Kandidat {
     alamatSesuaiKTP String?
     
     // asal
-    provinsiId String
-    kabupatenId String
+    provinsiId String?
+    kabupatenId String?
 
     bidang_pekerjaan String?
     pic String?
@@ -91,17 +93,17 @@ model Kandidat {
     biayaPelatihan PembayaranPelatihan @default(BELUM)
     suratPernyataan SuratPernyataan @default(BELUM)
 
-    cvUrl           String
-    kkUrl           String
-    ktpUrl          String
-    ktp_pendampingUrl     String
+    cvUrl           String?
+    kkUrl           String?
+    ktpUrl          String?
+    ktp_pendampingUrl     String?
     ijazahUrl       String?
     sertifikatUrl   String?
 
-    cvPublicId      String
-    kkPublicId      String
-    ktpPublicId     String
-    ktp_pendampingPublicId String
+    cvPublicId      String?
+    kkPublicId      String?
+    ktpPublicId     String?
+    ktp_pendampingPublicId String?
     ijazahPublicId  String?
     sertifikatPublicId String?
 
@@ -112,8 +114,8 @@ model Kandidat {
 
     kelasJepang KelasJepang? @relation(fields: [kelasJepangId], references: [id])
     kelasInggris KelasInggris? @relation(fields: [kelasInggrisId], references: [id])
-    provinsi Provinsi @relation(fields: [provinsiId], references: [id])
-    kabupaten Kabupaten @relation(fields: [kabupatenId], references: [id])
+    provinsi Provinsi? @relation(fields: [provinsiId], references: [id])
+    kabupaten Kabupaten? @relation(fields: [kabupatenId], references: [id])
 }
 
 enum Agama {
@@ -173,6 +175,11 @@ enum Interview {
   SIAP_INTERVIEW
   MENUNGGU_HASIL
   DITERIMA
+}
+
+enum Daftar {
+  PENDAFTARAN
+  ADMIN
 }
 
 model KelasJepang {
