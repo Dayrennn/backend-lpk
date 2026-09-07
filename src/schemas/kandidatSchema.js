@@ -12,7 +12,6 @@ export const daftarEnum = z.enum(["PENDAFTARAN", "ADMIN"]);
 export const kandidatAdminSchema = z.object({
     nama: z.string().min(1, "Nama wajib diisi").max(100, "Nama maksimal 100 karakter"),
     telephone: z.string().min(1, "Nomor telfon wajib diisi"),
-    userId: z.string().min(1, "Akun Tidak ter Autentikasi"),
 });
 
 export const kandidatSchema = z.object({

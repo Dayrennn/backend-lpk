@@ -8,7 +8,7 @@ const generateCode = () => {
     return randomInt(100000, 1000000).toString();
 };
 
-export const addKandidatAdmin = async ({ nama, telephone, pic, cvBuffer, userId, pendaftaran }) => {
+export const addKandidatAdmin = async ({ nama, telephone, pic, cvBuffer, userId }) => {
     if (!nama) {
         throw new Error("Nama Wajib di Isi");
     }

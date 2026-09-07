@@ -34,7 +34,8 @@ export const createKandidatAdmin = async (req, res) => {
             });
         }
 
-        const { nama, telephone, pic, userId } = result.data;
+        const { nama, telephone, pic } = result.data;
+        const userId = req.user?.id;
 
         // const files = req.files;
         const cvBuffer = req.file?.buffer;
