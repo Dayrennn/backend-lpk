@@ -39,7 +39,7 @@ router.post(
     createKandidat,
 );
 
-router.post('/add-kandidat-admin', upload.single({ name: "cv", maxCount: 1 }), authMiddleware, createKandidatAdmin)
+router.post('/add-kandidat-admin', authMiddleware, upload.single('cv'), createKandidatAdmin)
 
 router.post('/check', checkKandidat);
 router.post('/simpan-persyaratan/:id', authMiddleware, submitPersyaratandanDp);

@@ -1,7 +1,7 @@
-import { registerSchema } from '../schemas/registerSchema.js';
-import { login, me, register, registerVerifyOtp } from '../service/authService.js';
-import jwt from 'jsonwebtoken';
-import prisma from '../config/prisma.js';
+import { registerSchema, updateUserSchema } from "../schemas/userSchema.js";
+import { getAllUser, login, me, register, registerVerifyOtp, updateUser } from "../service/authService.js";
+import jwt from "jsonwebtoken";
+import prisma from "../config/prisma.js";
 
 export const registerUser = async (req, res) => {
     try {
@@ -10,14 +10,14 @@ export const registerUser = async (req, res) => {
             const errors = result.error.flatten().fieldErrors;
 
             return res.status(400).json({
-                message: 'Validasi Gagal',
+                message: "Validasi Gagal",
                 errors,
             });
         }
         const { username, email, password } = result.data;
         const create = await register({ username, email, password });
         res.status(200).json({
-            message: 'Berhasil Mendaftar User',
+            message: "Berhasil Mendaftar User",
             data: create,
         });
     } catch (error) {
@@ -32,7 +32,7 @@ export const verifyOtpUser = async (req, res) => {
         const { email, otp } = req.body;
         const verify = await registerVerifyOtp({ email, otp });
         res.status(200).json({
-            message: 'Berhasil Verifikasi',
+            message: "Berhasil Verifikasi",
             data: verify,
         });
     } catch (error) {
@@ -47,15 +47,15 @@ export const loginUser = async (req, res) => {
         const { email, password } = req.body;
         const { user, token } = await login({ email, password });
 
-        res.cookie('token', token, {
+        res.cookie("token", token, {
             httpOnly: true,
             secure: true,
-            sameSite: 'none',
+            sameSite: "none",
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
         res.status(200).json({
-            message: 'login berhasil',
+            message: "login berhasil",
             data: {
                 id: user.id,
                 username: user.username,
@@ -87,14 +87,14 @@ export const logout = async (req, res) => {
             }
         }
 
-        res.clearCookie('token', {
+        res.clearCookie("token", {
             httpOnly: true,
             secure: true,
-            sameSite: 'none',
-            path: '/',
+            sameSite: "none",
+            path: "/",
         });
 
-        return res.status(200).json({ message: 'Logout Berhasil' });
+        return res.status(200).json({ message: "Logout Berhasil" });
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }
@@ -104,8 +104,63 @@ export const getMe = async (req, res) => {
     try {
         const result = await me(req.user.id);
         res.status(200).json({
-            message: 'Berhasil',
+            message: "Berhasil",
             data: result,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
+export const getOneUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await me(id);
+        res.status(200).json({
+            message: "Berhasil Mengambil Data Satu User",
+            data: result,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
+export const seeAllUser = async (req, res) => {
+    try {
+        const result = await getAllUser();
+        res.status(200).json({
+            message: "Berhasil Ambil Data User",
+            data: result,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
+export const modifyUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = updateUserSchema.safeParse(req.body);
+        if (!result.success) {
+            const errors = result.error.flatten().fieldErrors;
+
+            return res.status(400).json({
+                message: "Validasi Gagal",
+                errors,
+            });
+        }
+        const { username, email, password, role } = result.data;
+
+        const update = await updateUser(id, { username, email, password, role });
+        return res.status(200).json({
+            message: "Berhasil Merubah User",
+            data: update,
         });
     } catch (error) {
         res.status(500).json({
