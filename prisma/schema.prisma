@@ -20,6 +20,7 @@ model User {
     username String @unique
     password String
     role Role @default(Admin)
+    last_seen DateTime?
 
     kandidat Kandidat[]
 }

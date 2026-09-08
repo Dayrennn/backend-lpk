@@ -1,5 +1,5 @@
 import express from "express";
-import { getMe, getOneUser, loginUser, logout, modifyUser, registerUser, seeAllUser, verifyOtpUser } from "../controller/authController.js";
+import { getMe, getOneUser, heartbeat, loginUser, logout, modifyUser, registerUser, seeAllUser, seeAllUserOnline, verifyOtpUser } from "../controller/authController.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -7,10 +7,12 @@ const router = express.Router();
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.post("/verify-otp", verifyOtpUser);
+router.post("/heartbeat", authMiddleware, heartbeat);
 router.put("/:id", authMiddleware, modifyUser);
 router.post("/logout", authMiddleware, logout);
+router.get("/status", authMiddleware, seeAllUserOnline);
 router.get("/me", authMiddleware, getMe);
-router.get("/one-user/:id", authMiddleware, getOneUser)
+router.get("/one-user/:id", authMiddleware, getOneUser);
 router.get("/", authMiddleware, seeAllUser);
 
 export default router;

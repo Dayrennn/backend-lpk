@@ -97,6 +97,7 @@ export const me = async (id) => {
             email: true,
             username: true,
             role: true,
+            last_seen: true,
         },
     });
     return user;
@@ -169,4 +170,42 @@ export const updateUser = async (id, { email, username, password, role }, curren
     });
 
     return update;
+};
+
+export const updateOnline = async (userId) => {
+    const result = await prisma.user.update({
+        where: { id: userId },
+        data: {
+            last_seen: new Date(),
+        },
+        select: {
+            id: true,
+            last_seen: true,
+        },
+    });
+
+    return result;
+};
+
+export const getOnline = async () => {
+    const result = await prisma.user.findMany({
+        select: {
+            id: true,
+            username: true,
+            email: true,
+            role: true,
+            last_seen: true,
+        },
+    });
+
+    const now = Date.now();
+
+    return result.map((user) => {
+        const isOnline = user.last_seen && now - new Date(user.last_seen).getTime() < 60_000;
+
+        return {
+            ...user,
+            status: isOnline ? "Online" : "Offline",
+        };
+    });
 };

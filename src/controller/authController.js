@@ -1,5 +1,5 @@
 import { registerSchema, updateUserSchema } from "../schemas/userSchema.js";
-import { getAllUser, login, me, register, registerVerifyOtp, updateUser } from "../service/authService.js";
+import { getAllUser, getOnline, login, me, register, registerVerifyOtp, updateOnline, updateUser } from "../service/authService.js";
 import jwt from "jsonwebtoken";
 import prisma from "../config/prisma.js";
 
@@ -163,7 +163,37 @@ export const modifyUser = async (req, res) => {
             data: update,
         });
     } catch (error) {
-        res.status(400).json({
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
+export const heartbeat = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const result = await updateOnline(userId);
+
+        res.status(200).json({
+            message: "Berhasil Memperbarui Status",
+            data: result,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: error.message,
+        });
+    }
+};
+
+export const seeAllUserOnline = async (req, res) => {
+    try {
+        const result = await getOnline();
+        res.status(200).json({
+            message: "Berhasil Mendapatkan Status",
+            data: result,
+        });
+    } catch (error) {
+        res.status(500).json({
             message: error.message,
         });
     }
