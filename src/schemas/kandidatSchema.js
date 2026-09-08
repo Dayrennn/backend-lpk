@@ -35,8 +35,6 @@ export const kandidatSchema = z.object({
 
     email: z.string().email("Format email tidak valid").optional().or(z.literal("")),
 
-    pendaftaran: daftarEnum.default("PENDAFTARAN"),
-
     agama: agamaEnum,
 
     pernikahan: pernikahanEnum,

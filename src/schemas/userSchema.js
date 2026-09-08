@@ -12,7 +12,7 @@ export const registerSchema = z.object({
 
 export const updateUserSchema = z.object({
     username: z.string().optional(),
-    email: z.string().email("Email Tidak Valid").optional(),
-    password: z.string().min(6, "Password Minimal 6 Karakter").max(100, "Password Maksimal 100 Karakter").optional(),
-    role: roleEnum.optional(),
+    email: z.string().optional(),
+    password: z.string().optional(),
+    role: roleEnum,
 });
