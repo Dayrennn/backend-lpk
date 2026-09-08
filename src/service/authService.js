@@ -93,10 +93,10 @@ export const me = async (id) => {
     const user = await prisma.user.findUnique({
         where: { id },
         select: {
+            id: true,
             email: true,
             username: true,
             role: true,
-            password: true,
         },
     });
     return user;
@@ -115,7 +115,7 @@ export const getAllUser = async () => {
     return result;
 };
 
-export const updateUser = async (id, { email, username, password, role }) => {
+export const updateUser = async (id, { email, username, password, role }, currentUser) => {
     const existing = await prisma.user.findUnique({
         where: { id },
     });
@@ -124,20 +124,30 @@ export const updateUser = async (id, { email, username, password, role }) => {
         throw new Error("User tidak ditemukan");
     }
 
+    // Hanya SuperAdmin yang boleh mengubah role atau mengedit akun pengguna lain
+    if (role && role !== existing.role) {
+        if (currentUser?.role !== "SuperAdmin") {
+            throw new Error("Hanya SuperAdmin yang memiliki wewenang untuk mengubah role pengguna");
+        }
+    }
+
+    if (currentUser?.role !== "SuperAdmin" && currentUser?.id !== id) {
+        throw new Error("Anda tidak memiliki izin untuk mengubah data akun pengguna lain");
+    }
+
     if (username || email) {
-        const existing = await prisma.user.findFirst({
+        const existingWithSameName = await prisma.user.findFirst({
             where: {
                 OR: [username ? { username } : undefined, email ? { email } : undefined].filter(Boolean),
                 NOT: { id },
             },
         });
-        if (existing) throw new Error("Username atau email sudah di gunakan");
+        if (existingWithSameName) throw new Error("Username atau email sudah di gunakan");
     }
 
     // validasi role
     const validRoles = ["Admin", "SuperAdmin"];
 
-    // berarti role nya ga ada
     if (role && !validRoles.includes(role)) throw new Error("Role tidak valid");
 
     const data = {};
@@ -151,9 +161,9 @@ export const updateUser = async (id, { email, username, password, role }) => {
         where: { id },
         data,
         select: {
+            id: true,
             username: true,
             email: true,
-            password: true,
             role: true,
         },
     });

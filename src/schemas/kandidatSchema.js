@@ -33,7 +33,9 @@ export const kandidatSchema = z.object({
 
     telephone: z.string().min(1, "Nomor telfon wajib diisi"),
 
-    pendaftaran: daftarEnum,
+    email: z.string().email("Format email tidak valid").optional().or(z.literal("")),
+
+    pendaftaran: daftarEnum.default("PENDAFTARAN"),
 
     agama: agamaEnum,
 

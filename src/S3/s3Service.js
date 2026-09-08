@@ -28,12 +28,12 @@ export const uploadToCloudinary = (buffer, { folder, publicId, resourceType = 'a
     });
 };
 
-export const deleteFromCloudinary = async (publicId) => {
+export const deleteFromCloudinary = async (publicId, { resourceType = 'image' } = {}) => {
     if (!publicId) return;
     try {
-        await cloudinary.uploader.destroy(publicId);
+        await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
     } catch (error) {
-        console.error('Gagal hapus gambar cloudinary:', error.message);
+        console.error('Gagal hapus berkas cloudinary:', error.message);
         // sengaja tidak di-throw, biar tidak menggagalkan proses utama
     }
 };

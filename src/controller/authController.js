@@ -157,13 +157,13 @@ export const modifyUser = async (req, res) => {
         }
         const { username, email, password, role } = result.data;
 
-        const update = await updateUser(id, { username, email, password, role });
+        const update = await updateUser(id, { username, email, password, role }, req.user);
         return res.status(200).json({
             message: "Berhasil Merubah User",
             data: update,
         });
     } catch (error) {
-        res.status(500).json({
+        res.status(400).json({
             message: error.message,
         });
     }

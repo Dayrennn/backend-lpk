@@ -16,7 +16,12 @@ const port = 3000;
 app.use(morgan("dev"));
 app.use(
     cors({
-        origin: ["http://localhost:3001", "https://delta-abadi-international.netlify.app/", "https://lpkdeltaabadiinternational.vercel.app"],
+        origin: [
+            "http://localhost:3000",
+            "http://localhost:3001",
+            "https://delta-abadi-international.netlify.app",
+            "https://lpkdeltaabadiinternational.vercel.app",
+        ],
         credentials: true,
     }),
 );
@@ -28,6 +33,14 @@ app.use("/otp", otpRoutes);
 app.use("/kandidat", kandidatRoutes);
 app.use("/dashboard", dashboardRoutes);
 app.use("/asal", asalRoutes);
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+    console.error("Global Error Handler:", err);
+    res.status(err.status || 500).json({
+        message: err.message || "Terjadi kesalahan internal pada server",
+    });
+});
 
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);

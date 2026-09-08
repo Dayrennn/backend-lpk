@@ -25,9 +25,19 @@ export const getAllkandidatDashboard = async (page = 1, limit = 10, search = '')
                       },
                   },
                   {
-                      asal: {
-                          contains: search.trim(),
-                          mode: 'insensitive',
+                      provinsi: {
+                          namaProvinsi: {
+                              contains: search.trim(),
+                              mode: 'insensitive',
+                          },
+                      },
+                  },
+                  {
+                      kabupaten: {
+                          namaKabupaten: {
+                              contains: search.trim(),
+                              mode: 'insensitive',
+                          },
                       },
                   },
                   {
@@ -39,6 +49,7 @@ export const getAllkandidatDashboard = async (page = 1, limit = 10, search = '')
                   {
                       telephone: {
                           contains: search.trim(),
+                          mode: 'insensitive',
                       },
                   },
               ],
