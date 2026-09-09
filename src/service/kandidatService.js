@@ -494,10 +494,6 @@ export const deleteKandidat = async (id) => {
         throw new Error("Kandidat Tidak Ditemukan");
     }
 
-    const removedKandidat = await prisma.kandidat.delete({
-        where: { id },
-    });
-
     await deleteFromCloudinary(existingKandidat.cvPublicId, { resourceType: "raw" });
     await deleteFromCloudinary(existingKandidat.kkPublicId, { resourceType: "image" });
     await deleteFromCloudinary(existingKandidat.ktpPublicId, { resourceType: "image" });
@@ -507,6 +503,10 @@ export const deleteKandidat = async (id) => {
     if (existingKandidat.sertifikatPublicId) {
         await deleteFromCloudinary(existingKandidat.sertifikatPublicId, { resourceType: "raw" });
     }
+
+    const removedKandidat = await prisma.kandidat.delete({
+        where: { id },
+    });
 
     return removedKandidat;
 };
