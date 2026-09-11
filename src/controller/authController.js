@@ -2,6 +2,7 @@ import { registerSchema, updateUserSchema } from "../schemas/userSchema.js";
 import { getAllUser, getOnline, login, me, register, registerVerifyOtp, updateOnline, updateUser } from "../service/authService.js";
 import jwt from "jsonwebtoken";
 import prisma from "../config/prisma.js";
+import ms from "ms";
 
 export const registerUser = async (req, res) => {
     try {
@@ -44,14 +45,16 @@ export const verifyOtpUser = async (req, res) => {
 
 export const loginUser = async (req, res) => {
     try {
-        const { email, password } = req.body;
-        const { user, token } = await login({ email, password });
+        const { email, password, remember } = req.body;
+        const { user, token } = await login({ email, password, remember });
+
+        const expiresIn = remember ? process.emv.JWT_EXPIRES_IN : process.env.JWT_EXPIRES_IN_REMEMBER;
 
         res.cookie("token", token, {
             httpOnly: true,
             secure: true,
             sameSite: "none",
-            maxAge: 7 * 24 * 60 * 60 * 1000,
+            maxAge: ms(expiresIn),
         });
 
         res.status(200).json({

@@ -55,7 +55,7 @@ export const registerVerifyOtp = async ({ email, otp }) => {
     return newUser;
 };
 
-export const login = async ({ email, password }) => {
+export const login = async ({ email, password, remember }) => {
     if (!email) {
         throw new Error("Email Wajib di isi");
     }
@@ -84,7 +84,9 @@ export const login = async ({ email, password }) => {
         throw new Error("Username atau password salah");
     }
 
-    const token = generateToken({ id: user.id, username: user.username, email: user.email });
+    const expiresIn = remember ? process.env.JWT_EXPIRES_IN : process.env.JWT_EXPIRES_IN_REMEMBER;
+
+    const token = generateToken({ id: user.id, username: user.username, email: user.email }, expiresIn);
 
     return { user, token };
 };
