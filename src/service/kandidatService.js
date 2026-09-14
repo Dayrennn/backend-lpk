@@ -225,7 +225,7 @@ export const addKandidat = async ({
             provinsi: { connect: { id: provinsiId } },
             kabupaten: { connect: { id: kabupatenId } },
             kacamatan: { connect: { id: kacamatanId } },
-            kabupaten: { connect: { id: kabupatenId } },
+            kelurahan: { connect: { id: kelurahanId } },
             bidang_pekerjaan,
             pic,
             keterangan,
