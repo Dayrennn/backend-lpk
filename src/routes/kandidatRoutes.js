@@ -35,6 +35,7 @@ router.post(
         { name: 'ktp_pendamping', maxCount: 1 },
         { name: 'ijazah', maxCount: 1 },
         { name: 'sertifikat', maxCount: 1 },
+        { name: 'foto', maxCount: 1 },
     ]),
     createKandidat,
 );

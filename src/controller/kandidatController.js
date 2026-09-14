@@ -98,6 +98,7 @@ export const createKandidat = async (req, res) => {
         const ktpBuffer = files?.ktp?.[0]?.buffer;
         const ktp_pendampingBuffer = files?.ktp_pendamping?.[0]?.buffer;
         const ijazahBuffer = files?.ijazah?.[0]?.buffer;
+        const fotoBuffer = files?.foto?.[0]?.buffer;
         const sertifikatBuffer = files?.sertifikat?.[0]?.buffer ?? null;
 
         const kandidat = await addKandidat({
@@ -130,6 +131,7 @@ export const createKandidat = async (req, res) => {
             ktp_pendampingBuffer,
             ijazahBuffer,
             sertifikatBuffer,
+            fotoBuffer
         });
 
         return res.status(201).json({

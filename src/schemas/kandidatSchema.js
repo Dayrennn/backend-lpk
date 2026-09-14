@@ -27,6 +27,8 @@ export const kandidatSchema = z.object({
 
     kacamatanId: z.string().min(1, "Kacamatan Wajib diisi"),
 
+    kelurahanId: z.string().optional(),
+
     tgllahir: z.string().min(1, "Tanggal lahir wajib diisi"),
 
     tujuan: z.string().min(1, "Tujuan wajib diisi"),

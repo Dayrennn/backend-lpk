@@ -74,6 +74,7 @@ export const addKandidat = async ({
     ktp_pendampingBuffer,
     ijazahBuffer,
     sertifikatBuffer,
+    fotoBuffer,
 }) => {
     if (!nama) {
         throw new Error("Nama Wajib di Isi");
@@ -101,6 +102,9 @@ export const addKandidat = async ({
     }
     if (!ijazahBuffer) {
         throw new Error("Ijazah Wajib di Isi");
+    }
+    if (!fotoBuffer) {
+        throw new Error("Pas Foto Wajib di Isi");
     }
     if (!tujuan) {
         throw new Error("Tujuan Wajib di Isi");
@@ -168,6 +172,7 @@ export const addKandidat = async ({
     const compressedKtp = await compressToWebp(ktpBuffer, `ktp-${nama}`);
     const compressedKtpPendamping = await compressToWebp(ktp_pendampingBuffer, `ktp-pendamping-${nama}`);
     const compressedIjazah = await compressToWebp(ijazahBuffer, `ijazah-${nama}`);
+    const compressedFoto = await compressToWebp(fotoBuffer, `pas-foto-${nama}`);
 
     const uploadKK = await uploadToCloudinary(compressedKK, {
         folder: "Kandidat/KK",
@@ -190,6 +195,12 @@ export const addKandidat = async ({
     const uploadIjazah = await uploadToCloudinary(compressedIjazah, {
         folder: "Kandidat/Ijazah",
         publicId: `ijazah-${nama}-${Date.now()}`,
+        resourceType: "image",
+    });
+
+    const uploadPasFoto = await uploadToCloudinary(compressedFoto, {
+        folder: "Kandidat/pas-Foto",
+        publicId: `pas-foto-${nama}-${Date.now()}`,
         resourceType: "image",
     });
 
@@ -255,6 +266,9 @@ export const addKandidat = async ({
 
             ijazahUrl: uploadIjazah.url,
             ijazahPublicId: uploadIjazah.publicId,
+
+            fotoUrl: uploadPasFoto.url,
+            fotoPublicId: uploadPasFoto.publicId,
 
             sertifikatUrl: uploadSertifikat?.url ?? null,
             sertifikatPublicId: uploadSertifikat?.publicId ?? null,
@@ -736,6 +750,8 @@ export const getAllkandidat = async (page = 1, limit = 10, search = "") => {
                 createdAt: true,
                 updatedAt: true,
 
+                fotoUrl: true,
+                fotoPublicId: true,
                 cvUrl: true,
                 kkUrl: true,
                 ktpUrl: true,
@@ -800,6 +816,7 @@ const FILE_FIELD_CONFIG = {
     ktpUrl: { publicIdField: "ktpPublicId", resourceType: "image", format: "webp" },
     ktp_pendampingUrl: { publicIdField: "ktp_pendampingPublicId", resourceType: "image", format: "webp" },
     ijazahUrl: { publicIdField: "ijazahPublicId", resourceType: "image", format: "webp" },
+    fotoUrl: { publicIdField:"fotoPublicId", resourceType: "image", format: "webp" },
 };
 
 export const getKandidatFile = async (id, field) => {

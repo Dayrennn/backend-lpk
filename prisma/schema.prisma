@@ -102,6 +102,7 @@ model Kandidat {
     ktp_pendampingUrl     String?
     ijazahUrl       String?
     sertifikatUrl   String?
+    fotoUrl String?
 
     cvPublicId      String?
     kkPublicId      String?
@@ -109,6 +110,7 @@ model Kandidat {
     ktp_pendampingPublicId String?
     ijazahPublicId  String?
     sertifikatPublicId String?
+    fotoPublicId String?
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
