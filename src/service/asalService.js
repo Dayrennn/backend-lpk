@@ -10,6 +10,20 @@ export const getAllProvinsi = async () => {
                     id: true,
                     namaKabupaten: true,
                     provinsiId: true,
+                    kacamatan: {
+                        select: {
+                            id: true,
+                            namaKacamatan: true,
+                            kabupatenId: true,
+                            kelurahan: {
+                                select: {
+                                    id: true,
+                                    namaKelurahan: true,
+                                    kacamatanId: true,
+                                },
+                            },
+                        },
+                    },
                 },
             },
         },

@@ -76,6 +76,8 @@ export const createKandidat = async (req, res) => {
             pendidikan,
             provinsiId,
             kabupatenId,
+            kacamatanId,
+            kelurahanId,
             bidang_pekerjaan,
             pic,
             keterangan,
@@ -86,6 +88,7 @@ export const createKandidat = async (req, res) => {
             pernikahan,
             email,
             tempatLahir,
+            alamatSesuaiKTP
         } = result.data;
 
         const files = req.files;
@@ -107,6 +110,8 @@ export const createKandidat = async (req, res) => {
             pendidikan,
             provinsiId,
             kabupatenId,
+            kacamatanId,
+            kelurahanId,
             bidang_pekerjaan,
             pic,
             keterangan,
@@ -117,6 +122,7 @@ export const createKandidat = async (req, res) => {
             pernikahan,
             email,
             tempatLahir,
+            alamatSesuaiKTP,
 
             cvBuffer,
             kkBuffer,

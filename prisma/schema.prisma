@@ -79,6 +79,8 @@ model Kandidat {
     // asal
     provinsiId String?
     kabupatenId String?
+    kacamatanId String?
+    kelurahanId String?
 
     bidang_pekerjaan String?
     pic String?
@@ -117,6 +119,8 @@ model Kandidat {
     kelasInggris KelasInggris? @relation(fields: [kelasInggrisId], references: [id])
     provinsi Provinsi? @relation(fields: [provinsiId], references: [id])
     kabupaten Kabupaten? @relation(fields: [kabupatenId], references: [id])
+    kacamatan Kacamatan? @relation(fields: [kacamatanId], references: [id])
+    kelurahan Kelurahan? @relation(fields: [kelurahanId], references: [id])
 }
 
 enum Agama {
@@ -212,4 +216,28 @@ model Kabupaten {
 
   provinsi Provinsi @relation(fields: [provinsiId], references: [id])
   kandidat Kandidat[]
+  kacamatan Kacamatan[]
+}
+
+model Kacamatan {
+  id String @id @default(uuid())
+  namaKacamatan String
+  kabupatenId String
+
+  kabupaten Kabupaten @relation(fields: [kabupatenId], references: [id])
+  kandidat Kandidat[]
+  kelurahan Kelurahan[]
+
+  @@unique([namaKacamatan, kabupatenId])
+}
+
+model Kelurahan {
+  id String @id @default(uuid())
+  namaKelurahan String
+  kacamatanId String
+
+  kacamatan Kacamatan @relation(fields: [kacamatanId], references: [id])
+  kandidat Kandidat[]
+
+  @@unique([namaKelurahan, kacamatanId])
 }

@@ -54,6 +54,8 @@ export const addKandidat = async ({
     pendidikan,
     provinsiId,
     kabupatenId,
+    kacamatanId,
+    kelurahanId,
     bidang_pekerjaan,
     pic,
     keterangan,
@@ -65,6 +67,7 @@ export const addKandidat = async ({
     tempatLahir,
     dana,
     pendaftaran,
+    alamatSesuaiKTP,
     cvBuffer,
     kkBuffer,
     ktpBuffer,
@@ -119,6 +122,12 @@ export const addKandidat = async ({
 
     if (!tempatLahir) {
         throw new Error("Tempat Lahir Wajib di Isi");
+    }
+    if (!alamatSesuaiKTP) {
+        throw new Error("Alamat Wajib di Isi");
+    }
+    if (!kacamatanId) {
+        throw new Error("Kacamatan Wajib di isi");
     }
 
     const generateUniqueCode = async () => {
@@ -213,8 +222,10 @@ export const addKandidat = async ({
             ...(status && { status }),
             tujuan,
             pendidikan,
-            provinsiId,
-            kabupatenId,
+            provinsi: { connect: { id: provinsiId } },
+            kabupaten: { connect: { id: kabupatenId } },
+            kacamatan: { connect: { id: kacamatanId } },
+            kabupaten: { connect: { id: kabupatenId } },
             bidang_pekerjaan,
             pic,
             keterangan,
@@ -228,6 +239,7 @@ export const addKandidat = async ({
             pendaftaran: "PENDAFTARAN",
 
             ojk: statusOJK,
+            alamatSesuaiKTP,
 
             cvUrl: uploadCv.url,
             cvPublicId: uploadCv.publicId,
