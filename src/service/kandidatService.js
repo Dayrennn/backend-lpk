@@ -294,6 +294,8 @@ export const updateKandidat = async (
         pendidikan,
         provinsiId,
         kabupatenId,
+        kacamatanId,
+        kelurahanId,
         bidang_pekerjaan,
         pic,
         keterangan,
@@ -303,6 +305,7 @@ export const updateKandidat = async (
         ktp_pendampingBuffer,
         ijazahBuffer,
         sertifikatBuffer,
+        fotoBuffer,
         tujuan,
         ojk,
     },
@@ -374,8 +377,16 @@ export const updateKandidat = async (
     let newKtpPendampingUpload = null;
     let newIjazahUpload = null;
     let newSertifikatUpload = null;
+    let newFotoUpload = null;
 
     try {
+        if (fotoBuffer) {
+            newFotoUpload = await uploadToCloudinary(fotoBuffer, {
+                folder: "Kandidat/pas-foto",
+                publicId: `pas-foto-${existing.nama}-${Date.now()}`,
+                resourceType: "image",
+            });
+        }
         if (cvBuffer) {
             newCvUpload = await uploadToCloudinary(cvBuffer, {
                 folder: "Kandidat/Cv",
@@ -443,12 +454,17 @@ export const updateKandidat = async (
                 pendidikan: pendidikan !== undefined ? pendidikan : existing.pendidikan,
                 provinsiId: provinsiId !== undefined ? provinsiId : existing.provinsiId,
                 kabupatenId: kabupatenId !== undefined ? kabupatenId : existing.kabupatenId,
+                kelurahanId: kelurahanId !== undefined ? kelurahanId : existing.kelurahanId,
+                kacamatanId: kacamatanId !== undefined ? kacamatanId : existing.kacamatanId,
                 bidang_pekerjaan: bidang_pekerjaan !== undefined ? bidang_pekerjaan : existing.bidang_pekerjaan,
                 pic: pic !== undefined ? pic : existing.pic,
                 keterangan: keterangan !== undefined ? keterangan : existing.keterangan,
                 telephone: telephone !== undefined ? telephone : existing.telephone,
                 telephone_sekunder: telephone_sekunder !== undefined ? telephone_sekunder : existing.telephone_sekunder,
                 umur: umur,
+
+                fotoUrl: newFotoUpload?.url ?? existing.fotoUrl,
+                fotoPublicId: newFotoUpload?.publicId ?? existing.fotoPublicId,
 
                 cvUrl: newCvUpload?.url ?? existing.cvUrl,
                 cvPublicId: newCvUpload?.publicId ?? existing.cvPublicId,
@@ -478,6 +494,9 @@ export const updateKandidat = async (
         });
 
         // hapus file lama
+        if (newFotoUpload && existing.fotoPublicId) {
+            await deleteFromCloudinary(existing.fotoPublicId, { resourceType: "image" });
+        }
         if (newCvUpload && existing.cvPublicId) {
             await deleteFromCloudinary(existing.cvPublicId, { resourceType: "raw" });
         }
@@ -500,6 +519,7 @@ export const updateKandidat = async (
         return updated;
     } catch (error) {
         // hapus file baru kalau update gagal
+        if (newFotoUpload) await deleteFromCloudinary(newFotoUpload.publicId, { resourceType: "image" });
         if (newCvUpload) await deleteFromCloudinary(newCvUpload.publicId, { resourceType: "raw" });
         if (newKkUpload) await deleteFromCloudinary(newKkUpload.publicId, { resourceType: "image" });
         if (newKtpUpload) await deleteFromCloudinary(newKtpUpload.publicId, { resourceType: "image" });
@@ -525,6 +545,7 @@ export const deleteKandidat = async (id) => {
     await deleteFromCloudinary(existingKandidat.ktpPublicId, { resourceType: "image" });
     await deleteFromCloudinary(existingKandidat.ktp_pendampingPublicId, { resourceType: "image" });
     await deleteFromCloudinary(existingKandidat.ijazahPublicId, { resourceType: "image" });
+    await deleteFromCloudinary(existingKandidat.fotoPublicId, { resourceType: "image" });
 
     if (existingKandidat.sertifikatPublicId) {
         await deleteFromCloudinary(existingKandidat.sertifikatPublicId, { resourceType: "raw" });
@@ -816,7 +837,7 @@ const FILE_FIELD_CONFIG = {
     ktpUrl: { publicIdField: "ktpPublicId", resourceType: "image", format: "webp" },
     ktp_pendampingUrl: { publicIdField: "ktp_pendampingPublicId", resourceType: "image", format: "webp" },
     ijazahUrl: { publicIdField: "ijazahPublicId", resourceType: "image", format: "webp" },
-    fotoUrl: { publicIdField:"fotoPublicId", resourceType: "image", format: "webp" },
+    fotoUrl: { publicIdField: "fotoPublicId", resourceType: "image", format: "webp" },
 };
 
 export const getKandidatFile = async (id, field) => {
@@ -878,6 +899,18 @@ export const getOneKandidat = async (id) => {
                     namaKabupaten: true,
                 },
             },
+            kacamatan: {
+                select: {
+                    id: true,
+                    namaKacamatan: true,
+                },
+            },
+            kelurahan: {
+                select: {
+                    id: true,
+                    namaKelurahan: true,
+                },
+            },
             agama: true,
             pernikahan: true,
             umur: true,
@@ -888,6 +921,7 @@ export const getOneKandidat = async (id) => {
             telephone: true,
             telephone_sekunder: true,
             dana: true,
+            fotoUrl: true,
             cvUrl: true,
             kkUrl: true,
             ktpUrl: true,

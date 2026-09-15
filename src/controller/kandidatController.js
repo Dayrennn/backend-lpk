@@ -171,6 +171,8 @@ export const modifyKandidat = async (req, res) => {
             pendidikan,
             provinsiId,
             kabupatenId,
+            kacamatanId,
+            kelurahanId,
             bidang_pekerjaan,
             pic,
             keterangan,
@@ -185,6 +187,7 @@ export const modifyKandidat = async (req, res) => {
 
         const files = req.files;
 
+        const fotoBuffer = files?.foto?.[0]?.buffer;
         const cvBuffer = files?.cv?.[0]?.buffer;
         const kkBuffer = files?.kk?.[0]?.buffer;
         const ktpBuffer = files?.ktp?.[0]?.buffer;
@@ -205,6 +208,8 @@ export const modifyKandidat = async (req, res) => {
             pendidikan,
             provinsiId,
             kabupatenId,
+            kacamatanId,
+            kelurahanId,
             bidang_pekerjaan,
             pic,
             keterangan,
@@ -217,6 +222,7 @@ export const modifyKandidat = async (req, res) => {
             tempatLahir,
 
             cvBuffer,
+            fotoBuffer,
             kkBuffer,
             ktpBuffer,
             ktp_pendampingBuffer,
