@@ -167,49 +167,46 @@ export const addKandidat = async ({
 
     const umur = calculateAge(tanggalLahirDate);
 
-    // kompress gambar
-    const compressedKK = await compressToWebp(kkBuffer, `KK-${nama}`);
-    const compressedKtp = await compressToWebp(ktpBuffer, `ktp-${nama}`);
-    const compressedKtpPendamping = await compressToWebp(ktp_pendampingBuffer, `ktp-pendamping-${nama}`);
-    const compressedIjazah = await compressToWebp(ijazahBuffer, `ijazah-${nama}`);
-    const compressedFoto = await compressToWebp(fotoBuffer, `pas-foto-${nama}`);
+    const [compressedKK, compressedKtp, compressedKtpPendamping, compressedIjazah, compressedFoto] = await Promise.all([
+        compressToWebp(kkBuffer, `KK-${nama}`),
+        compressToWebp(ktpBuffer, `ktp-${nama}`),
+        compressToWebp(ktp_pendampingBuffer, `ktp-pendamping-${nama}`),
+        compressToWebp(ijazahBuffer, `ijazah-${nama}`),
+        compressToWebp(fotoBuffer, `pas-foto-${nama}`),
+    ]);
 
-    const uploadKK = await uploadToCloudinary(compressedKK, {
-        folder: "Kandidat/KK",
-        publicId: `KK-${nama}-${Date.now()}`,
-        resourceType: "image",
-    });
-
-    const uploadKtp = await uploadToCloudinary(compressedKtp, {
-        folder: "Kandidat/Ktp",
-        publicId: `ktp-${nama}-${Date.now()}`,
-        resourceType: "image",
-    });
-
-    const uploadKtpPendamping = await uploadToCloudinary(compressedKtpPendamping, {
-        folder: "Kandidat/Ktp-Pendamping",
-        publicId: `ktp-pendamping-${nama}-${Date.now()}`,
-        resourceType: "image",
-    });
-
-    const uploadIjazah = await uploadToCloudinary(compressedIjazah, {
-        folder: "Kandidat/Ijazah",
-        publicId: `ijazah-${nama}-${Date.now()}`,
-        resourceType: "image",
-    });
-
-    const uploadPasFoto = await uploadToCloudinary(compressedFoto, {
-        folder: "Kandidat/pas-Foto",
-        publicId: `pas-foto-${nama}-${Date.now()}`,
-        resourceType: "image",
-    });
-
-    // upload pdf
-    const uploadCv = await uploadToCloudinary(cvBuffer, {
-        folder: "Kandidat/Cv",
-        publicId: `cv-${nama}-${Date.now()}.pdf`,
-        resourceType: "raw",
-    });
+    const [uploadKK, uploadKtp, uploadKtpPendamping, uploadIjazah, uploadPasFoto, uploadCv] = await Promise.all([
+        uploadToCloudinary(compressedKK, {
+            folder: "Kandidat/KK",
+            publicId: `KK-${nama}-${Date.now()}`,
+            resourceType: "image",
+        }),
+        uploadToCloudinary(compressedKtp, {
+            folder: "Kandidat/Ktp",
+            publicId: `ktp-${nama}-${Date.now()}`,
+            resourceType: "image",
+        }),
+        uploadToCloudinary(compressedKtpPendamping, {
+            folder: "Kandidat/Ktp-Pendamping",
+            publicId: `ktp-pendamping-${nama}-${Date.now()}`,
+            resourceType: "image",
+        }),
+        uploadToCloudinary(compressedIjazah, {
+            folder: "Kandidat/Ijazah",
+            publicId: `ijazah-${nama}-${Date.now()}`,
+            resourceType: "image",
+        }),
+        uploadToCloudinary(compressedFoto, {
+            folder: "Kandidat/pas-Foto",
+            publicId: `pas-foto-${nama}-${Date.now()}`,
+            resourceType: "image",
+        }),
+        uploadToCloudinary(cvBuffer, {
+            folder: "Kandidat/Cv",
+            publicId: `cv-${nama}-${Date.now()}.pdf`,
+            resourceType: "raw",
+        }),
+    ]);
 
     // karna sertifikat todak wajib
     let uploadSertifikat = null;
