@@ -1,7 +1,7 @@
-import cloudinary from '../config/cloudinary.js';
-import axios from 'axios';
+import cloudinary from "../config/cloudinary.js";
+import axios from "axios";
 
-export const uploadToCloudinary = (buffer, { folder, publicId, resourceType = 'auto' } = {}) => {
+export const uploadToCloudinary = (buffer, { folder, publicId, resourceType = "auto" } = {}) => {
     return new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
             {
@@ -9,7 +9,7 @@ export const uploadToCloudinary = (buffer, { folder, publicId, resourceType = 'a
                 public_id: publicId,
                 overwrite: true,
                 resource_type: resourceType,
-                type: 'authenticated',
+                type: "authenticated",
             },
             (error, result) => {
                 if (error) {
@@ -28,35 +28,35 @@ export const uploadToCloudinary = (buffer, { folder, publicId, resourceType = 'a
     });
 };
 
-export const deleteFromCloudinary = async (publicId, { resourceType = 'image' } = {}) => {
+export const deleteFromCloudinary = async (publicId) => {
     if (!publicId) return;
     try {
-        await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+        await cloudinary.uploader.destroy(publicId);
     } catch (error) {
-        console.error('Gagal hapus berkas cloudinary:', error.message);
+        console.error("Gagal hapus berkas cloudinary:", error.message);
         // sengaja tidak di-throw, biar tidak menggagalkan proses utama
     }
 };
 
 export const downloadFromCloudinary = async (fileUrl) => {
     if (!fileUrl) {
-        throw new Error('File Tidak Tersedia');
+        throw new Error("File Tidak Tersedia");
     }
 
-    const response = await axios.get(fileUrl, { responseType: 'stream' });
+    const response = await axios.get(fileUrl, { responseType: "stream" });
 
     return {
         stream: response.data,
-        contentType: response.headers['content-type'],
+        contentType: response.headers["content-type"],
     };
 };
 
-export const privateFileUrl = (publicId, resourceType = 'image', format) => {
+export const privateFileUrl = (publicId, resourceType = "image", format) => {
     const expiresAt = Math.floor(Date.now() / 1000) + 60;
 
-    return cloudinary.utils.private_download_url(publicId, resourceType === 'raw' ? null : format, {
+    return cloudinary.utils.private_download_url(publicId, resourceType === "raw" ? null : format, {
         resource_type: resourceType,
-        type: 'authenticated',
+        type: "authenticated",
         expires_at: expiresAt,
         attachment: true,
     });
