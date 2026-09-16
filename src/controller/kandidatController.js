@@ -68,6 +68,7 @@ export const createKandidat = async (req, res) => {
 
         const {
             nama,
+            nik,
             tinggi,
             berat_badan,
             tgllahir,
@@ -103,6 +104,7 @@ export const createKandidat = async (req, res) => {
 
         const kandidat = await addKandidat({
             nama,
+            nik,
             tinggi,
             berat_badan,
             tgllahir,

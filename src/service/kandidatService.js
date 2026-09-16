@@ -46,6 +46,7 @@ export const addKandidatAdmin = async ({ nama, telephone, pic, cvBuffer, userId 
 export const addKandidat = async ({
     kodeRegistrasi,
     nama,
+    nik,
     tinggi,
     berat_badan,
     tgllahir,
@@ -78,6 +79,9 @@ export const addKandidat = async ({
 }) => {
     if (!nama) {
         throw new Error("Nama Wajib di Isi");
+    }
+    if (!nik) {
+        throw new Error("Nik Wajib di Isi");
     }
     if (!tinggi && tinggi !== 0) {
         throw new Error("Tinggi Wajib di Isi");
@@ -132,6 +136,14 @@ export const addKandidat = async ({
     }
     if (!kacamatanId) {
         throw new Error("Kacamatan Wajib di isi");
+    }
+
+    const existing = await prisma.kandidat.findFirst({
+        where: { nik },
+    });
+
+    if (existing) {
+        throw new Error(`Nik ini ${nik} sudah ada`);
     }
 
     const generateUniqueCode = async () => {
@@ -224,6 +236,7 @@ export const addKandidat = async ({
         data: {
             kodeRegistrasi: code,
             nama,
+            nik,
             tinggi: tinggiFloat,
             berat_badan: beratBadanFloat,
             tgllahir: tanggalLahirDate,

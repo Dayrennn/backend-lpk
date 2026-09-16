@@ -47,6 +47,7 @@ model Kandidat {
     umur Int?
     userId String?
     nama String
+    nik String?
     tinggi Float?
     berat_badan Float?
 
@@ -123,6 +124,8 @@ model Kandidat {
     kabupaten Kabupaten? @relation(fields: [kabupatenId], references: [id])
     kacamatan Kacamatan? @relation(fields: [kacamatanId], references: [id])
     kelurahan Kelurahan? @relation(fields: [kelurahanId], references: [id])
+
+    @@unique([nama, nik])
 }
 
 enum Agama {

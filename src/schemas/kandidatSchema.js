@@ -17,6 +17,8 @@ export const kandidatAdminSchema = z.object({
 export const kandidatSchema = z.object({
     nama: z.string().min(1, "Nama wajib diisi").max(100, "Nama maksimal 100 karakter"),
 
+    nik: z.string().min(1, "Nik wajib diisi").max(17, "NIK Maksimal 17 digit"),
+
     tinggi: z.coerce.number().positive("Tinggi harus lebih dari 0"),
 
     berat_badan: z.coerce.number().positive("Berat badan harus lebih dari 0"),
