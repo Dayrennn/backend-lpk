@@ -1535,14 +1535,19 @@ export const simpanDataPMI = async ({
         throw new Error("Kandidat tidak ditemukan");
     }
 
-    const tanggalTerimaDate = new Date(tanggalTerima);
-    if (isNaN(tanggalTerimaDate.getTime())) {
-        throw new Error("Format Tanggal Lahir Tidak Valid");
+    let tanggalTerimaDate;
+    if (tanggalTerima !== undefined && tanggalTerima !== null && tanggalTerima !== "") {
+        tanggalTerimaDate = new Date(tanggalTerima);
+        if (isNaN(tanggalTerimaDate.getTime())) {
+            throw new Error("Format Tanggal Terima Tidak Valid");
+        }
     }
-
-    const tanggalBerangkatDate = new Date(tanggalBerangkat);
-    if (isNaN(tanggalBerangkatDate.getTime())) {
-        throw new Error("Format Tanggal Lahir Tidak Valid");
+    let tanggalBerangkatDate;
+    if (tanggalBerangkat !== undefined && tanggalBerangkat !== null && tanggalBerangkat !== "") {
+        tanggalBerangkatDate = new Date(tanggalBerangkat);
+        if (isNaN(tanggalBerangkatDate.getTime())) {
+            throw new Error("Format Tanggal Berangkat Tidak Valid");
+        }
     }
 
     const updated = await prisma.kandidat.update({
@@ -1557,8 +1562,9 @@ export const simpanDataPMI = async ({
             namaKerabat,
             telephoneKerabat,
             job,
-            tanggalTerima: tanggalTerimaDate,
-            tanggalBerangkat: tanggalBerangkatDate,
+            // kalo undefined di biarin atau tidak di update
+            ...(tanggalTerimaDate !== undefined && { tanggalTerima: tanggalTerimaDate }),
+            ...(tanggalBerangkatDate !== undefined && { tanggalBerangkat: tanggalBerangkatDate }),
             perusahaanPenempatan,
             kontrak,
             tempatPelatihan,
