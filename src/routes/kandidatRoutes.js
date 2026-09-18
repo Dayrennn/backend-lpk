@@ -23,11 +23,13 @@ import {
     seeAllKandidatAdmin
 } from '../controller/kandidatController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
+import { registerLimiter } from '../middleware/apiLimiterMiddleware.js';
 
 const router = express.Router();
 
 router.post(
     '/add-kandidat',
+    registerLimiter,
     upload.fields([
         { name: 'cv', maxCount: 1 },
         { name: 'kk', maxCount: 1 },
