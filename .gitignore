@@ -6,3 +6,4 @@ export-neon.js
 import-mysql.js
 test-mysql.cjs
 /export
+/backup-neon
