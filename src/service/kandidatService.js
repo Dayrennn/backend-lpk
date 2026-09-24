@@ -717,7 +717,7 @@ export const getAllkandidat = async (page = 1, limit = 10, search = "") => {
                     },
                 },
                 {
-                    tujuan: {
+                    kodeRegistrasi: {
                         contains: search.trim(),
                         mode: "insensitive",
                     },
