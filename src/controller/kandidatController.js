@@ -89,7 +89,7 @@ export const createKandidat = async (req, res) => {
             pernikahan,
             email,
             tempatLahir,
-            alamatSesuaiKTP
+            alamatSesuaiKTP,
         } = result.data;
 
         const files = req.files;
@@ -102,7 +102,7 @@ export const createKandidat = async (req, res) => {
         const fotoBuffer = files?.foto?.[0]?.buffer;
         const sertifikatBuffer = files?.sertifikat?.[0]?.buffer ?? null;
 
-        const kandidat = await addKandidat({
+        const kandidatPromise = addKandidat({
             nama,
             nik,
             tinggi,
@@ -133,14 +133,30 @@ export const createKandidat = async (req, res) => {
             ktp_pendampingBuffer,
             ijazahBuffer,
             sertifikatBuffer,
-            fotoBuffer
+            fotoBuffer,
         });
+
+        const timeOut = new Promise((_, reject) => {
+            setTimeout(() => {
+                reject(new Error("REQUEST_TIMEOUT"));
+            }, 30000); // 30 detik ges
+        });
+
+        const kandidat = await Promise.race([kandidatPromise, timeOut]);
 
         return res.status(201).json({
             message: "Kandidat berhasil ditambahkan",
             data: kandidat,
         });
     } catch (error) {
+        if (error.message === "REQUEST_TIMEOUT") {
+            return res.status(504).json({
+                message: "Proses terlalu lama, coba lagi",
+            });
+        }
+
+        console.error(error);
+
         return res.status(500).json({
             message: error.message,
         });
