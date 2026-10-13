@@ -2,7 +2,6 @@ import express from "express";
 import morgan from "morgan";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import path from "path";
 
 import authRoutes from "../routes/authRoutes.js";
 import otpRoutes from "../routes/otpRoutes.js";
@@ -13,10 +12,18 @@ import asalRoutes from "../routes/asalRoutes.js";
 const app = express();
 const port = 3000;
 
+app.set("trust proxy", 1);
+
 app.use(morgan("dev"));
 app.use(
     cors({
-        origin: ["http://localhost:3000", "http://localhost:3001", "https://delta-abadi-international.netlify.app", "https://lpkdeltaabadiinternational.vercel.app"],
+        origin: [
+            "http://localhost:3000",
+            "http://localhost:3001",
+            "https://delta-abadi-international.netlify.app",
+            "https://lpkdeltaabadiinternational.vercel.app",
+            "https://pendaftaran.dwideltainternational.com/",
+        ],
         credentials: true,
     }),
 );
